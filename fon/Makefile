@@ -3,7 +3,7 @@
 
 CPPFLAGS += -I ../kar -I ../melder -I ../sys -I ../dwsys -I ../stat -I ../dwtools -I ../LPC -I ../foned -I ../fon -I ../external/portaudio -I ../external/flac -I ../external/mp3 -I ../external/espeak -I ../external/whispercpp
 
-OBJECTS = FrequencyTrajectories.o Transition.o Distributions_and_Transition.o \
+OBJECTS = FrequencyTrajectories.o praat_FrequencyTrajectories.o Transition.o Distributions_and_Transition.o \
    Function.o Sampled.o SampledXY.o Matrix.o Vector.o Polygon.o PointProcess.o \
    Matrix_and_PointProcess.o Matrix_and_Polygon.o AnyTier.o RealTier.o \
    Sound.o LongSound.o SoundSet.o Sound_files.o Sound_audio.o PointProcess_and_Sound.o Sound_PointProcess.o ParamCurve.o \

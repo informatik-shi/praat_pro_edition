@@ -3,7 +3,7 @@
 
 CPPFLAGS += -I ../kar -I ../melder -I ../sys -I ../dwsys -I ../stat -I ../dwtools -I ../LPC -I ../fon -I ../external/portaudio -I ../external/flac -I ../external/mp3 -I ../external/espeak
 
-OBJECTS = SoundRecorder.o \
+OBJECTS = FrequencyTrajectoriesEditor.o SoundRecorder.o \
    FunctionArea.o SoundArea.o SoundAnalysisArea.o TextGridArea.o \
    SpectrumArea.o PointArea.o PitchArea.o SpectrogramArea.o \
    RealTierArea.o PitchTierArea.o IntensityTierArea.o DurationTierArea.o AmplitudeTierArea.o \
