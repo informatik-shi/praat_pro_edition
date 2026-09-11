@@ -1277,6 +1277,15 @@ void GuiText_scrollToSelection (GuiText me) {
 		//gtk_text_view_scroll_to_mark (GTK_TEXT_VIEW (my d_widget), mark, 0.1, false, 0.0, 0.0);
 	#elif motif
 		Edit_ScrollCaret (my d_widget -> window);
+		if (my flags & GuiText_SCRIPT_IDE) {
+			// Go To Line selects the newline too; keep the beginning visible, not only its trailing caret.
+			CHARRANGE selection;
+			SendMessageW (my d_widget -> window, EM_EXGETSEL, 0, (LPARAM) & selection);
+			const auto line = SendMessageW (my d_widget -> window, EM_EXLINEFROMCHAR, 0, selection.cpMin);
+			const auto first = SendMessageW (my d_widget -> window, EM_GETFIRSTVISIBLELINE, 0, 0);
+			if (line < first)
+				SendMessageW (my d_widget -> window, EM_LINESCROLL, 0, line - first);
+		}
 	#elif cocoa
 		if (my d_cocoaTextView)
 			[my d_cocoaTextView   scrollRangeToVisible: [my d_cocoaTextView   selectedRange]];
