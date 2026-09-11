@@ -2372,6 +2372,10 @@ void Interpreter_resume (Interpreter me) {
 				break;
 			if (my isHalted)
 				break;
+			if (my debugger) {
+				my debugger -> beforeStatement (me);
+				if (my stopped) break;
+			}
 			trace (U"going to handle line ", my lineNumber, U": ", my lines [my lineNumber]);
 			constvector <mutablestring32> lines = my lines.get();
 			try {
@@ -3643,6 +3647,8 @@ void Interpreter_resume (Interpreter me) {
 				Melder_appendError (U"Script line ", my lineNumber, U" not performed or completed:\n« ", my lines [my lineNumber], U" »");
 			}
 		}
+		if (my debugger && ! Melder_hasError (U"Script exited."))
+			my debugger -> onError (me, Melder_getError());
 		//my numberOfLabels = 0;
 		my running = false;
 		my stopped = false;

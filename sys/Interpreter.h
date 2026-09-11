@@ -24,6 +24,7 @@
 
 #include <string>
 #include <unordered_map>
+#include "ScriptDebugger.h"
 
 Thing_define (InterpreterVariable, SimpleString) {
 	double numericValue;   // a variable whose name has no suffix: a real, an integer, or a boolean
@@ -75,6 +76,7 @@ enum class kInterpreter_ReturnType {
 conststring32 kInterpreter_ReturnType_errorMessage (kInterpreter_ReturnType returnType, conststring32 command);
 
 Thing_define (Interpreter, Thing) {
+	ScriptDebugger *debugger = nullptr; // borrowed, optional; no GUI dependency
 	Script scriptReference;
 	Notebook notebookReference;
 	InterpreterStack owningInterpreterStack;
