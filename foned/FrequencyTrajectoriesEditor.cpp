@@ -35,10 +35,13 @@ void structFrequencyTrajectoriesArea::v_drawInside() {
     if(backgroundSound&&(cachedStart!=startWindow()||cachedEnd!=endWindow())) {
         cachedStart=startWindow();cachedEnd=endWindow();spectrogram.reset();
         try {
+            // Like SoundAnalysisArea: progress callbacks must not re-enter painting.
+            autoMelderProgressOff progress;
             auto part=Sound_extractPart(backgroundSound,std::max(backgroundSound->xmin,startWindow()-windowLength),std::min(backgroundSound->xmax,endWindow()+windowLength),kSound_windowShape::RECTANGULAR,1.0,true);
             spectrogram=Sound_to_Spectrogram_e(part.get(),windowLength,std::min(ceiling,0.5/backgroundSound->dx),std::max(0.002,(endWindow()-startWindow())/1500.0),std::max(10.0,ceiling/600.0),kSound_to_Spectrogram_windowShape::GAUSSIAN,8.0,8.0);
         }catch(MelderError){Melder_clearError();}
     }
+    FunctionArea_setViewport(this);
     Graphics_setWindow(graphics(),startWindow(),endWindow(),ymin,ymax);
     if(spectrogram)Spectrogram_paintInside(spectrogram.get(),graphics(),startWindow(),endWindow(),0,ceiling,0,true,dynamicRange,6.0,0,kSpectrogram_colourMap::GREY,false);
     // Non-selected tracks use distinct colours; the active tier uses Praat's editable-point styling.
