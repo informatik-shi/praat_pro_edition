@@ -38,3 +38,6 @@ Praat.app
 .Rdata
 .Rhistory
 .Rproj.user
+
+# Local build and verification logs for the custom project
+/.local-build/

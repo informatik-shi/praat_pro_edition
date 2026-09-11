@@ -13,13 +13,15 @@
 - Commit: `6f3da9ef1d8cce0d5684afc104d02888dfc71b25` (2026-08-28).
 - Локальная метка исходного состояния: `custom-base-7.0.02`.
 - Ветка разработки: `custom/main`; официальный remote: `upstream`.
-- Исходники приложения пока не изменены. Исполняемый файл ещё не собран.
+- Исходники приложения пока не изменены. `Praat.exe` собран для Windows x64v1.
+- Оба batch-набора авторов пройдены: 135 + 78 скриптов, код выхода 0.
 
 ## Документация
 
 - [Журнал шагов](project-docs/JOURNAL.md).
 - [Сборка и проверка Windows](project-docs/BUILD_WINDOWS.md).
 - [План разработки](project-docs/ROADMAP.md).
+- [Отчёт базовой сборки](project-docs/BASELINE_WINDOWS.md).
 - Оригинальные [README](README.md) и [инструкция авторов](HOW_TO_BUILD_ONE.md).
 
 ## Работа с Git

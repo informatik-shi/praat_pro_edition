@@ -1,7 +1,7 @@
 # Сборка Windows
 
-Статус: инструкция подготовлена по HOW_TO_BUILD_ONE.md из зафиксированных
-исходников; локальная сборка ещё не выполнялась. Начальная целевая платформа —
+Инструкция основана на HOW_TO_BUILD_ONE.md из зафиксированных
+исходников. Начальная целевая платформа —
 Windows x64, `PRAAT_ARCH=x64v1` для широкой совместимости.
 
 ## Подготовка
@@ -14,7 +14,8 @@ Windows x64, `PRAAT_ARCH=x64v1` для широкой совместимости
 pacman -S --needed make mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-pkgconf
 ```
 
-Команды установки здесь записаны для следующего этапа и пока не выполнялись.
+На этом компьютере MSYS2 установлен в `C:\msys64` 2026-09-11.
+Установлены Clang 22.1.8, GNU Make 4.4.1 и pkg-config 3.0.7.
 
 ## Базовая сборка
 
@@ -22,16 +23,38 @@ pacman -S --needed make mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-pkgc
 
 ```bash
 cd /c/Users/PC/Documents/job/praatrus
-clang --version
-make --version
-pkg-config --version
-make PRAAT_ARCH=x64v1 -j4
+bash scripts/build-windows.sh
 ```
 
 Ожидаемый результат — `Praat.exe` в корне. Он, объектные файлы и библиотеки
 уже исключены оригинальным .gitignore. В первую очередь проверяем сборку
 исходного кода без функциональных изменений. Сохраняем версии инструментов,
-команду сборки и результат в JOURNAL.md.
+команду сборки и результат в JOURNAL.md. Скрипт выполняет
+`make PRAAT_ARCH=x64v1 -j4`; число процессов можно задать через `JOBS`.
+Логи, версии пакетов и контрольная сумма EXE сохраняются в `.local-build/`.
+
+Из PowerShell:
+
+```powershell
+$env:MSYSTEM = 'CLANG64'
+& C:\msys64\usr\bin\bash.exe --login -c 'cd /c/Users/PC/Documents/job/praatrus && bash scripts/build-windows.sh'
+```
+
+## Автоматические тесты
+
+Из той же CLANG64 shell в корне проекта:
+
+```bash
+bash scripts/test-windows.sh
+```
+
+Используются `test/runAllTests_batch.praat` и `dwtest/runAllTests_batch.praat`.
+Batch-варианты исключают GUI-тесты; первый также исключает ручные и скоростные
+тесты. Каждый набор получает отдельный лог в `.local-build/`; сводка —
+`test-results.txt`. Код выхода скрипта ненулевой, если любой набор не прошёл.
+Предпочтения и плагины пользователя отключены параметрами Praat. Для штатных
+наборов передаётся `--FULL-TRUST`: тесты создают и удаляют временные файлы.
+Этот параметр не следует переносить на непроверенные сторонние скрипты.
 
 ## Проверка приложения
 
