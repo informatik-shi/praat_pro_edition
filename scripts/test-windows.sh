@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
-if [[ ! -f Praat.exe ]]; then
-    echo 'Build Praat.exe first with scripts/build-windows.sh.' >&2
+executable="${PRAAT_EXECUTABLE:-./Praat-custom.exe}"
+if [[ ! -f "$executable" ]]; then
+    echo 'Build Praat-custom.exe first with scripts/build-windows.sh.' >&2
     exit 2
 fi
 mkdir -p .local-build
@@ -11,7 +12,7 @@ result=0
 for suite in test dwtest; do
     echo "Running $suite/runAllTests_batch.praat"
     # Upstream tests create and remove temporary fixtures; trust only these suites.
-    if ./Praat.exe --utf8 --no-pref-files --no-plugins --FULL-TRUST --run "$suite/runAllTests_batch.praat" > ".local-build/$suite.log" 2>&1; then
+    if "$executable" --utf8 --no-pref-files --no-plugins --FULL-TRUST --run "$suite/runAllTests_batch.praat" > ".local-build/$suite.log" 2>&1; then
         echo "$suite: PASS (exit 0)" | tee -a .local-build/test-results.txt
     else
         code=$?

@@ -41,3 +41,5 @@ Praat.app
 
 # Local build and verification logs for the custom project
 /.local-build/
+/Praat-custom.exe
+/dist/
