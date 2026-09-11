@@ -21,6 +21,7 @@
 #include "praatP.h"
 #include "EditorM.h"
 #include "UiPause.h"
+#include "WinScriptEditor.h"
 
 Thing_implement (ScriptEditor, TextEditor, 0);
 
@@ -36,9 +37,32 @@ bool ScriptEditors_dirty () {
 }
 
 void structScriptEditor :: v9_destroy () noexcept {
+	WinScriptEditor_destroy (this);
 	our argsDialog. reset();   // don't delay till delete
 	theReferencesToAllOpenScriptEditors. undangleItem (this);
 	ScriptEditor_Parent :: v9_destroy ();
+}
+
+void structScriptEditor :: v_goAway () {
+	if (WinScriptEditor_active (this)) {
+		WinScriptEditor_action (this, ScriptIDEAction::Stop);
+		return;
+	}
+	ScriptEditor_Parent :: v_goAway ();
+}
+
+static void script_text_changed (ScriptEditor me, GuiTextEvent) {
+	my dirty = true;
+	my v_nameChanged ();
+}
+void structScriptEditor :: v_createChildren () {
+	#if defined (_WIN32)
+		textWidget = GuiText_createShown (our windowForm, 0, 0, Machine_getMenuBarBottom(), -220, GuiText_SCROLLED | GuiText_SCRIPT_IDE);
+		GuiText_setChangedCallback (textWidget, script_text_changed, this);
+		WinScriptEditor_create (this);
+	#else
+		ScriptEditor_Parent :: v_createChildren ();
+	#endif
 }
 
 void structScriptEditor :: v_nameChanged () {
@@ -94,7 +118,15 @@ static void common_args_ok (UiForm sendingForm, void *void_me, Editor optionalEd
 	if (! MelderFile_isNull (& my file))
 		MelderFile_setDefaultDir (& my file);
 	Interpreter_rememberScript (my interpreterStack -> interpreters [1].get(), & my file, fullTrust);   // right before running! (not at interpreter creation, because the name may change)
-	my interpreterStack -> runDown (autoInterpreter(), text.move(), false);
+	const bool debugRun = WinScriptEditor_active (me);
+	if (debugRun) WinScriptEditor_begin (me);
+	try {
+		my interpreterStack -> runDown (autoInterpreter(), text.move(), false);
+	} catch (MelderError) {
+		if (debugRun) WinScriptEditor_finished (me);
+		throw;
+	}
+	if (debugRun) WinScriptEditor_finished (me);
 }
 static void args_ok (UiForm sendingForm, integer /* narg */, Stackel /* args */, conststring32 /* sendingString */,
 	Interpreter /* interpreter */, conststring32 /* invokingButtonTitle */, bool /* modified */, void *void_me, Editor optionalEditor)
@@ -141,6 +173,8 @@ static void args_ok_selectionOnly_FULL_TRUST (UiForm sendingForm, integer /* nar
 }
 
 static void common_menu_cb_run (ScriptEditor me, const bool fullTrust) {
+	const bool debugRun = WinScriptEditor_active (me);
+	if (! debugRun) WinScriptEditor_reset (me);
 	try {
 		Melder_assert (my interpreterStack);
 		my interpreterStack -> emptyAll ();
@@ -149,7 +183,10 @@ static void common_menu_cb_run (ScriptEditor me, const bool fullTrust) {
 			my optionalReferenceToOwningEditor,
 			& my file
 		);
+		interpreter -> debugger = WinScriptEditor_debugger (me);
 		autostring32 text = GuiText_getString (my textWidget);
+		if (interpreter -> debugger && (str32nequ (text.get(), U"include ", 8) || str32str (text.get(), U"\ninclude ")))
+			Melder_throw (U"For this debugger version, choose Convert > Expand include files before debugging. Normal Run supports includes unchanged.");
 		if (! MelderFile_isNull (& my file))
 			MelderFile_setDefaultDir (& my file);   // TODO: can be wrong
 		Melder_includeIncludeFiles (& text);
@@ -169,20 +206,32 @@ static void common_menu_cb_run (ScriptEditor me, const bool fullTrust) {
 			Interpreter_rememberScript (interpreter.get(), & my file, fullTrust);
 			Melder_assert (interpreter -> owningInterpreterStack);
 			interpreter -> owningInterpreterStack -> emptyAll ();   // TODO: should we create a new InterpreterStack instead, owned by the script editor?
+			if (debugRun) WinScriptEditor_begin (me);
 			interpreter -> owningInterpreterStack -> runDown (interpreter.move(), text.move(), false);
+			if (debugRun) WinScriptEditor_finished (me);
 		}
 	} catch (MelderError) {
+		if (auto debugger = WinScriptEditor_debugger (me)) {
+			debugger -> error = Melder_getError(); debugger -> state = ScriptDebugState::Error;
+			WinScriptEditor_finished (me);
+		}
+		if (debugRun) WinScriptEditor_finished (me);
 		Melder_flushError (U"The script didn’t run to its completion.");
 	}
 }
+void ScriptEditor_runForDebugger (ScriptEditor me) { common_menu_cb_run (me, false); }
 static void menu_cb_run (ScriptEditor me, EDITOR_ARGS) {
+	if (WinScriptEditor_active (me)) return;
 	common_menu_cb_run (me, false);
 }
 static void menu_cb_runWithFullTrust (ScriptEditor me, EDITOR_ARGS) {
+	if (WinScriptEditor_active (me)) return;
 	common_menu_cb_run (me, true);
 }
 
 static void common_menu_cb_runSelection (ScriptEditor me, const bool fullTrust) {
+	if (WinScriptEditor_active (me)) return;
+	WinScriptEditor_reset (me);
 	try {
 		Melder_assert (my interpreterStack);
 		my interpreterStack -> emptyAll ();
@@ -367,6 +416,15 @@ static void menu_cb_InitializationScripts (ScriptEditor, EDITOR_ARGS) { Melder_h
 static void menu_cb_AddingToAFixedMenu (ScriptEditor, EDITOR_ARGS) { Melder_help (U"Add to fixed menu..."); }
 static void menu_cb_AddingToADynamicMenu (ScriptEditor, EDITOR_ARGS) { Melder_help (U"Add to dynamic menu..."); }
 
+static void menu_cb_debugStart (ScriptEditor me, EDITOR_ARGS) { WinScriptEditor_action(me,ScriptIDEAction::Start); }
+static void menu_cb_debugStop (ScriptEditor me, EDITOR_ARGS) { WinScriptEditor_action(me,ScriptIDEAction::Stop); }
+static void menu_cb_debugOver (ScriptEditor me, EDITOR_ARGS) { WinScriptEditor_action(me,ScriptIDEAction::Over); }
+static void menu_cb_debugInto (ScriptEditor me, EDITOR_ARGS) { WinScriptEditor_action(me,ScriptIDEAction::Into); }
+static void menu_cb_debugOut (ScriptEditor me, EDITOR_ARGS) { WinScriptEditor_action(me,ScriptIDEAction::Out); }
+static void menu_cb_debugToggle (ScriptEditor me, EDITOR_ARGS) { WinScriptEditor_action(me,ScriptIDEAction::Toggle); }
+static void menu_cb_debugClear (ScriptEditor me, EDITOR_ARGS) { WinScriptEditor_action(me,ScriptIDEAction::Clear); }
+static void menu_cb_debugList (ScriptEditor me, EDITOR_ARGS) { WinScriptEditor_action(me,ScriptIDEAction::List); }
+
 void structScriptEditor :: v_createMenus () {
 	ScriptEditor_Parent :: v_createMenus ();
 	if (our wasCreatedInAnEditor()) {
@@ -387,6 +445,18 @@ void structScriptEditor :: v_createMenus () {
 	Editor_addCommand (this, U"Run", U"-- run with full trust --", 0, nullptr);
 	Editor_addCommand (this, U"Run", U"Run with FULL TRUST", 0, menu_cb_runWithFullTrust);
 	Editor_addCommand (this, U"Run", U"Run selection with FULL TRUST", 0, menu_cb_runSelectionWithFullTrust);
+	#if defined (_WIN32)
+		Editor_addMenu (this,U"Debug",0);
+		Editor_addCommand(this,U"Debug",U"Start / Continue",GuiMenu_F5,menu_cb_debugStart);
+		Editor_addCommand(this,U"Debug",U"Stop",GuiMenu_SHIFT | GuiMenu_F5,menu_cb_debugStop);
+		Editor_addCommand(this,U"Debug",U"Step Over",GuiMenu_F10,menu_cb_debugOver);
+		Editor_addCommand(this,U"Debug",U"Step Into",GuiMenu_F11,menu_cb_debugInto);
+		Editor_addCommand(this,U"Debug",U"Step Out",GuiMenu_SHIFT | GuiMenu_F11,menu_cb_debugOut);
+		Editor_addCommand(this,U"Debug",U"-- breakpoints --",0,nullptr);
+		Editor_addCommand(this,U"Debug",U"Toggle Breakpoint",GuiMenu_F9,menu_cb_debugToggle);
+		Editor_addCommand(this,U"Debug",U"Remove All Breakpoints",0,menu_cb_debugClear);
+		Editor_addCommand(this,U"Debug",U"Breakpoints...",0,menu_cb_debugList);
+	#endif
 }
 
 void structScriptEditor :: v_createMenuItems_help (EditorMenu menu) {

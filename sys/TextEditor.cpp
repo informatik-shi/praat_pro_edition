@@ -870,13 +870,15 @@ void structTextEditor :: v_createMenus () {
 
 	Editor_addMenu (this, U"Search", 0);
 	Editor_addCommand (this, U"Search", U"Find...", 'F', menu_cb_find);
-	Editor_addCommand (this, U"Search", U"Find again", 'G', menu_cb_findAgain);
+	Editor_addCommand (this, U"Search", U"Find again", textWidget -> flags & GuiText_SCRIPT_IDE ? GuiMenu_F3 : 'G', menu_cb_findAgain);
 	Editor_addCommand (this, U"Search", U"Replace...", GuiMenu_COMMAND_EXTRA | 'F', menu_cb_replace);
 	Editor_addCommand (this, U"Search", U"Replace again", GuiMenu_COMMAND_EXTRA | 'G', menu_cb_replaceAgain);
 	Editor_addCommand (this, U"Search", U"Use selection for find", 'E', menu_cb_useSelectionForFind);
 	Editor_addCommand (this, U"Search", U"-- line --", 0, nullptr);
 	Editor_addCommand (this, U"Search", U"Where am I?", 0, menu_cb_whereAmI);
-	Editor_addCommand (this, U"Search", U"Go to line...", 'L', menu_cb_goToLine);
+	Editor_addCommand (this, U"Search", U"Go to line...", textWidget -> flags & GuiText_SCRIPT_IDE ? 'G' : 'L', menu_cb_goToLine);
+	if (textWidget -> flags & GuiText_SCRIPT_IDE)
+		Editor_addCommand (this, U"Search", U"Go to line (legacy)...", 'L', menu_cb_goToLine);
 
 	Editor_addMenu (this, U"Convert", 0);
 	Editor_addCommand (this, U"Convert", U"Convert to C string", 0, menu_cb_convertToCString);

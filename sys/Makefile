@@ -16,7 +16,7 @@ OBJECTS = Thing.o Data.o Simple.o Collection.o Strings.o \
    praat.o praat_actions.o praat_menuCommands.o praat_picture.o \
    praat_script.o praat_statistics.o praat_logo.o praat_library.o \
    praat_objectMenus.o InfoEditor.o ScriptEditor.o NotebookEditor.o ButtonEditor.o \
-   Interpreter.o Formula.o ScriptDebugger.o \
+   Interpreter.o Formula.o ScriptDebugger.o ScriptSyntax.o WinScriptEditor.o \
    StringsEditor.o DemoEditor.o \
    motifEmulator.o GuiText.o GuiWindow.o Gui.o GuiObject.o GuiDrawingArea.o \
    GuiMenu.o GuiMenuItem.o GuiButton.o GuiLabel.o GuiCheckButton.o GuiRadioButton.o \

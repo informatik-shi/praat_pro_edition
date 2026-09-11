@@ -75,6 +75,8 @@ static void logo (Graphics graphics) {
 			#error Unknown OS type.
 		#endif
 	Graphics_text (graphics, 0.5, 0.54, Melder_cat (U"built for ", builtFor));
+	Graphics_setFontSize (graphics, 11.0);
+	Graphics_text (graphics, 0.5, 0.46, U"Praat Custom Script IDE — integrated debugger");
 	Graphics_setColour (graphics, Melder_BLACK);
 	Graphics_setFont (graphics, kGraphics_font::HELVETICA);
 	Graphics_setFontSize (graphics, 10.0);

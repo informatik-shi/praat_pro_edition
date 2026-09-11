@@ -37,6 +37,8 @@ Thing_define (ScriptEditor, TextEditor) {
 
 	void v9_destroy () noexcept
 		override;
+	void v_createChildren () override;
+	void v_goAway () override;
 	void v_nameChanged ()
 		override;
 	bool v_scriptable ()

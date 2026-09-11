@@ -18,6 +18,9 @@
 
 #include "GuiP.h"
 #include <locale.h>
+#if motif
+#include <richedit.h>
+#endif
 
 Thing_implement (GuiText, GuiControl, 0);
 
@@ -760,13 +763,22 @@ GuiText GuiText_create (GuiForm parent, int left, int right, int top, int bottom
 		my d_widget = _Gui_initializeWidget (xmTextWidgetClass, parent -> d_widget, flags & GuiText_SCROLLED ? U"scrolledText" : U"text");
 		_GuiObject_setUserData (my d_widget, me.get());
 		my d_editable = (flags & GuiText_NONEDITABLE) == 0;
-		my d_widget -> window = CreateWindow (L"edit", nullptr, WS_CHILD | WS_BORDER
+		if (flags & GuiText_SCRIPT_IDE) {
+			static HMODULE richEdit = LoadLibraryW (L"Msftedit.dll");
+			Melder_require (richEdit, U"Windows RichEdit could not be loaded.");
+		}
+		my d_widget -> window = CreateWindow (flags & GuiText_SCRIPT_IDE ? L"RICHEDIT50W" : L"edit", nullptr, WS_CHILD | WS_BORDER
 			| ( flags & GuiText_ANYWRAP ? ES_AUTOVSCROLL : ES_AUTOHSCROLL )
 			| ES_MULTILINE | WS_CLIPSIBLINGS
 			| ( flags & GuiText_SCROLLED ? WS_VSCROLL | ( flags & GuiText_ANYWRAP ? 0 : WS_HSCROLL ) : 0 ),
 			my d_widget -> x, my d_widget -> y, my d_widget -> width, my d_widget -> height,
 			my d_widget -> parent -> window, (HMENU) 1, theGui.instance, nullptr);
 		SetWindowLongPtr (my d_widget -> window, GWLP_USERDATA, (LONG_PTR) my d_widget);
+		if (flags & GuiText_SCRIPT_IDE) {
+			SendMessageW (my d_widget -> window, EM_SETEVENTMASK, 0, ENM_CHANGE | ENM_SELCHANGE | ENM_SCROLL);
+			SendMessageW (my d_widget -> window, EM_EXLIMITTEXT, 0, 0x7ffffffe);
+			SendMessageW (my d_widget -> window, EM_SETTARGETDEVICE, 0, 1); // no wrapping
+		}
 		if (! font10) {
 			font10 = CreateFont (13, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0/*FIXED_PITCH | FF_MODERN*/, /*L"Doulos SIL"*/L"Courier New");
 			font12 = CreateFont (16, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0/*FIXED_PITCH | FF_MODERN*/, /*L"Doulos SIL"*/L"Courier New");
@@ -776,6 +788,7 @@ GuiText GuiText_create (GuiForm parent, int left, int right, int top, int bottom
 		}
 		SetWindowFont (my d_widget -> window, font12 /*theScrolledHint ? font : GetStockFont (ANSI_VAR_FONT)*/, false);
 		Edit_LimitText (my d_widget -> window, 0);
+		if (flags & GuiText_SCRIPT_IDE) SendMessageW (my d_widget -> window, EM_EXLIMITTEXT, 0, 0x7ffffffe);
 		my v_positionInForm (my d_widget, left, right, top, bottom, parent);
 		/*
 			The first created text widget shall attract the input focus.
@@ -956,6 +969,15 @@ void GuiText_cut (GuiText me) {
 }
 
 autostring32 GuiText_getSelection (GuiText me) {
+	#if motif
+		if (my flags & GuiText_SCRIPT_IDE) {
+			integer first, last;
+			autostring32 text = GuiText_getStringAndSelectionPosition (me, & first, & last);
+			if (last <= first) return autostring32();
+			text [last] = U'\0';
+			return Melder_dup (text.get() + first);
+		}
+	#endif
 	#if gtk
 		// first = gtk_text_iter_get_offset (& start);
 		// last = gtk_text_iter_get_offset (& end);
@@ -1020,6 +1042,27 @@ autostring32 GuiText_getString (GuiText me) {
 }
 
 autostring32 GuiText_getStringAndSelectionPosition (GuiText me, integer *first, integer *last) {
+	#if motif
+		if (my flags & GuiText_SCRIPT_IDE) {
+			GETTEXTLENGTHEX lengthInfo { GTL_NUMCHARS | GTL_PRECISE, 1200 };
+			integer length = SendMessageW (my d_widget -> window, EM_GETTEXTLENGTHEX, (WPARAM) & lengthInfo, 0);
+			autostringW buffer (length, true);
+			GETTEXTEX info { (DWORD) ((length + 1) * sizeof (wchar_t)), GT_RAWTEXT, 1200, nullptr, nullptr };
+			SendMessageW (my d_widget -> window, EM_GETTEXTEX, (WPARAM) & info, (LPARAM) buffer.get());
+			CHARRANGE selection;
+			SendMessageW (my d_widget -> window, EM_EXGETSEL, 0, (LPARAM) & selection);
+			*first = selection.cpMin; *last = selection.cpMax;
+			for (integer i = 0; i < selection.cpMax && i < length; ++ i) {
+				if (buffer [i] >= 0xDC00 && buffer [i] <= 0xDFFF) {
+					-- *last;
+					if (i < selection.cpMin) -- *first;
+				}
+			}
+			autostring32 result = Melder_dup (Melder_peekWto32 (buffer.get()));
+			Melder_killReturns_inplace (result.get());
+			return result;
+		}
+	#endif
 	#if gtk
 		if (G_OBJECT_TYPE (G_OBJECT (my d_widget)) == GTK_TYPE_ENTRY) {
 			gint first_gint, last_gint;
@@ -1136,6 +1179,12 @@ void GuiText_paste (GuiText me) {
 }
 
 void GuiText_redo (GuiText me) {
+	#if motif
+		if (my flags & GuiText_SCRIPT_IDE) {
+			SendMessageW (my d_widget -> window, EM_REDO, 0, 0);
+			return;
+		}
+	#endif
 	#if gtk || motif
 		history_do (me, 0);
 	#elif cocoa
@@ -1324,8 +1373,10 @@ void GuiText_setSelection (GuiText me, integer first, integer last) {
 			if (text [i] > 0xFFFF)
 				numberOfSelectedHighUnicodeValues ++;
 
-		first += numberOfLeadingLineBreaks;
-		last += numberOfLeadingLineBreaks + numberOfSelectedLineBreaks;
+		if (! (my flags & GuiText_SCRIPT_IDE)) {
+			first += numberOfLeadingLineBreaks;
+			last += numberOfLeadingLineBreaks + numberOfSelectedLineBreaks;
+		}
 		first += numberOfLeadingHighUnicodeValues;
 		last += numberOfLeadingHighUnicodeValues + numberOfSelectedHighUnicodeValues;
 
@@ -1433,6 +1484,12 @@ void GuiText_setUndoItem (GuiText me, GuiMenuItem item) {
 }
 
 void GuiText_undo (GuiText me) {
+	#if motif
+		if (my flags & GuiText_SCRIPT_IDE) {
+			SendMessageW (my d_widget -> window, EM_UNDO, 0, 0);
+			return;
+		}
+	#endif
 	#if gtk
 		history_do (me, 1);
 	#elif motif

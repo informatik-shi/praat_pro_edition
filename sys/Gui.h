@@ -1125,6 +1125,7 @@ Thing_define (GuiText, GuiControl) {
 #define GuiText_INKWRAP  4
 #define GuiText_ANYWRAP  (GuiText_CHARWRAP | GuiText_INKWRAP)
 #define GuiText_NONEDITABLE  8
+#define GuiText_SCRIPT_IDE  16   // opt-in Windows RichEdit, ordinary GuiText stays unchanged
 GuiText GuiText_create      (GuiForm parent, int left, int right, int top, int bottom, uint32 flags);
 GuiText GuiText_createShown (GuiForm parent, int left, int right, int top, int bottom, uint32 flags);
 
