@@ -1,8 +1,8 @@
-# Praat Custom — начало проекта
+# Praat Custom Script IDE
 
 Рабочее название проекта: Praat Custom (папка `praatrus`). Цель — собственная
-сборка Praat с документированной историей изменений. Состав кастомизации ещё
-не определён; русификация не считается согласованным требованием.
+сборка Praat со встроенным Script IDE и настоящим debugger интерпретатора.
+Русификация не входит в текущий этап.
 
 ## Исходная точка
 
@@ -13,13 +13,17 @@
 - Commit: `6f3da9ef1d8cce0d5684afc104d02888dfc71b25` (2026-08-28).
 - Локальная метка исходного состояния: `custom-base-7.0.02`.
 - Ветка разработки: `custom/main`; официальный remote: `upstream`.
-- Исходники приложения пока не изменены. `Praat.exe` собран для Windows x64v1.
+- Реализован Windows Script IDE; результат: `dist/praat-custom.exe`.
+- Исходная сборка сохранена отдельно как `Praat.exe`.
 - Оба batch-набора авторов пройдены: 135 + 78 скриптов, код выхода 0.
 
 ## Документация
 
 - [Журнал шагов](project-docs/JOURNAL.md).
-- [Сборка и проверка Windows](project-docs/BUILD_WINDOWS.md).
+- [Сборка и проверка Windows](BUILD_WINDOWS.md).
+- [Архитектура debugger](docs/debugger-architecture.md).
+- [Приёмочные проверки](docs/acceptance.md).
+- [Изменения относительно upstream](CHANGES_CUSTOM.md).
 - [План разработки](project-docs/ROADMAP.md).
 - [Отчёт базовой сборки](project-docs/BASELINE_WINDOWS.md).
 - Оригинальные [README](README.md) и [инструкция авторов](HOW_TO_BUILD_ONE.md).

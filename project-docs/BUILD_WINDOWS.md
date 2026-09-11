@@ -1,5 +1,9 @@
 # Сборка Windows
 
+Это историческая инструкция baseline. Для текущей кастомной сборки используйте
+корневой [BUILD_WINDOWS.md](../BUILD_WINDOWS.md) и `build-windows.ps1`.
+Текущие скрипты создают `dist/praat-custom.exe` вместо baseline `Praat.exe`.
+
 Инструкция основана на HOW_TO_BUILD_ONE.md из зафиксированных
 исходников. Начальная целевая платформа —
 Windows x64, `PRAAT_ARCH=x64v1` для широкой совместимости.
