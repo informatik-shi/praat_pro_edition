@@ -49,6 +49,7 @@ Alternatively, from CLANG64:
 cd /c/Users/PC/Documents/job/praatrus
 bash scripts/build-windows.sh
 bash scripts/test-debugger.sh
+bash scripts/test-trajectories.sh
 bash scripts/test-windows.sh
 ```
 

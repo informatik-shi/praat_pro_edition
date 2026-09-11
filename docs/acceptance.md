@@ -1,5 +1,9 @@
 # Приёмка Praat Custom Script IDE
 
+Исторический отчёт этапа Script IDE: приведённый SHA относится к сборке
+до добавления FrequencyTrajectories. Новый этап описан в
+[frequency-trajectories.md](frequency-trajectories.md) и журнале проекта.
+
 Дата: 2026-09-11. Windows x64, MSYS2 CLANG64, Clang 22.1.8.
 Upstream Praat 7.0.02. Это работающая первая версия встроенного IDE.
 

@@ -19,6 +19,8 @@
 
 ## Документация
 
+- [Траектории частот и формант на спектрограмме](docs/frequency-trajectories.md).
+
 - [Журнал шагов](project-docs/JOURNAL.md).
 - [Сборка и проверка Windows](BUILD_WINDOWS.md).
 - [Архитектура debugger](docs/debugger-architecture.md).

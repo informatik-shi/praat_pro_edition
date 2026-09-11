@@ -1,5 +1,9 @@
 # Changes relative to Praat 7.0.02
 
+- FrequencyTrajectories object: named frequency tracks, CSV/TSV import/export, native Praat serialization.
+- Sound + FrequencyTrajectories editor: waveform, cached spectrogram, draggable points, Undo/Redo, playback.
+- Formant conversion to editable FrequencyTrajectories; example CSV and interactive demo.
+
 - Windows Script Editor opts into system RichEdit; other editors use their original widgets.
 - Visible-line syntax colouring, gutter line numbers, breakpoint marks, execution mark and Ln/Col status.
 - Debug menu: F5, Shift+F5, F9, F10, F11, Shift+F11.
