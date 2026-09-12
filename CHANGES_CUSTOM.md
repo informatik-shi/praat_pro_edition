@@ -1,5 +1,9 @@
 # Changes relative to Praat 7.0.02
 
+- Code folding in both Windows script editors: nested block markers, View menu,
+  F8 toggle, Ctrl+F8 collapse all, Shift+F8 expand all; original source line numbers
+  and automatic expansion at debugger/search destinations.
+
 - Embedded Lua 5.5.1 with a typed Praat command bridge, selection/object API and Lua error tracebacks.
 - Separate Lua Editor: Windows syntax colouring, line numbers, F5 run, F7 syntax check, selection run and cooperative Stop.
 - Lua source modules, UTF-8 strings, scalar/vector/matrix results; local script trust and host lifecycle protections.

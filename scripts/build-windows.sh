@@ -29,5 +29,6 @@ cp docs/frequency-trajectories.md dist/
 mkdir -p dist/examples
 cp tests/trajectories/tracks.csv tests/trajectories/demo.praat dist/examples/
 cp docs/lua.md dist/
+cp docs/code-folding.md dist/
 cp external/lua-5.5.1/doc/readme.html dist/LICENSE-Lua.html
 cp tests/lua/demo.lua dist/examples/
