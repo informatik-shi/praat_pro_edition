@@ -65,6 +65,13 @@ static void execute (LuaEditor me, bool selection, bool check,bool debugging=fal
         UINT stopCommand=0;
         std::vector<int> disabledMenus;
         std::vector<HWND> disabled;
+        static BOOL CALLBACK disableWindow(HWND w,LPARAM p) {
+            auto self=reinterpret_cast<Guard*>(p);
+            if(w!=self->shell && IsWindowVisible(w) && IsWindowEnabled(w)) {
+                self->disabled.push_back(w); EnableWindow(w,FALSE);
+            }
+            return TRUE;
+        }
 #endif
         explicit Guard(LuaEditor owner):editor(owner) {
 #if defined (_WIN32)
@@ -80,12 +87,7 @@ static void execute (LuaEditor me, bool selection, bool check,bool debugging=fal
             }
             DrawMenuBar(shell);
             SendMessageW(text,EM_SETREADONLY,TRUE,0);
-            EnumThreadWindows(GetCurrentThreadId(),[](HWND w,LPARAM p)->BOOL {
-                auto self=reinterpret_cast<Guard*>(p);
-                if(w!=self->shell && IsWindowVisible(w) && IsWindowEnabled(w)) {
-                    self->disabled.push_back(w); EnableWindow(w,FALSE);
-                } return TRUE;
-            },(LPARAM)this);
+            EnumThreadWindows(GetCurrentThreadId(),disableWindow,(LPARAM)this);
 #endif
         }
         ~Guard() {

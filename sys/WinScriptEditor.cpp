@@ -207,6 +207,13 @@ struct WinIDE final : ScriptDebugger {
             else if(msg.message==WM_PAINT||msg.message==WM_NCPAINT||msg.message==WM_ERASEBKGND)DispatchMessageW(&msg);
         }
     }
+    static BOOL CALLBACK disableWindow(HWND w,LPARAM p) {
+        auto self=reinterpret_cast<WinIDE*>(p);
+        if(w!=self->shell&&IsWindowEnabled(w)&&IsWindowVisible(w)) {
+            self->disabledWindows.push_back(w);EnableWindow(w,FALSE);
+        }
+        return TRUE;
+    }
     void lock (bool locked) {
         SendMessageW(text,EM_SETREADONLY,locked,0);
         editor->textWidget->d_editable=!locked;
@@ -218,10 +225,7 @@ struct WinIDE final : ScriptDebugger {
         }
         DrawMenuBar(shell);
         if(locked&&disabledWindows.empty()) {
-            EnumThreadWindows(GetCurrentThreadId(),[](HWND w,LPARAM p)->BOOL {
-                auto self=reinterpret_cast<WinIDE*>(p);
-                if(w!=self->shell&&IsWindowEnabled(w)&&IsWindowVisible(w)){self->disabledWindows.push_back(w);EnableWindow(w,FALSE);}return TRUE;
-            },(LPARAM)this);
+            EnumThreadWindows(GetCurrentThreadId(),disableWindow,(LPARAM)this);
         }
         if(!locked){for(HWND w:disabledWindows)if(IsWindow(w))EnableWindow(w,TRUE);disabledWindows.clear();}
     }

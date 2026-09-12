@@ -26,6 +26,7 @@ export PRAAT_EXECUTABLE=./Praat-win7-x86.exe
 bash scripts/test-lua.sh
 bash scripts/test-lua-plot.sh
 bash scripts/test-trajectories.sh
+bash scripts/test-windows7-x86.sh
 objdump -p Praat-win7-x86.exe > .local-build/pe-imports.txt
 objdump -f Praat-win7-x86.exe | grep 'file format pei-i386'
 # Standalone distribution must depend only on inbox Windows libraries.

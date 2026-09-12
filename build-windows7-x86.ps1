@@ -17,6 +17,8 @@ try {
     $env:PRAAT_GIT = (Get-Command git -CommandType Application | Select-Object -First 1).Source
     & $bash --login -c 'bash scripts/build-windows7-x86.sh'
     if ($LASTEXITCODE -ne 0) { throw "Win7 x86 build failed ($LASTEXITCODE). See .local-build/win7-x86-build.log." }
+    Compress-Archive -Path (Join-Path $PSScriptRoot 'dist\windows7-x86\*') -DestinationPath (Join-Path $PSScriptRoot 'dist\praat-win7-x86.zip') -Force
+    Write-Output 'Ready: dist\praat-win7-x86.zip'
 } finally {
     Pop-Location
     $env:MSYSTEM = $previousSystem
