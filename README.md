@@ -1,5 +1,9 @@
 # Praat: doing phonetics by computer
 
+Custom Windows build: [Lua Editor and API](docs/lua.md),
+[frequency trajectories](docs/frequency-trajectories.md),
+[build instructions](BUILD_WINDOWS.md), [custom changes](CHANGES_CUSTOM.md).
+
 Welcome to Praat! Praat is a speech analysis tool used for doing phonetics by computer.
 Praat can analyse, synthesize, and manipulate speech, and create high-quality pictures for your publications.
 Praat was created by Paul Boersma and David Weenink of the Institute of Phonetics Sciences of the University of Amsterdam.

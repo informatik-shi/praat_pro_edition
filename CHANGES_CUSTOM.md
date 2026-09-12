@@ -1,5 +1,10 @@
 # Changes relative to Praat 7.0.02
 
+- Embedded Lua 5.5.1 with a typed Praat command bridge, selection/object API and Lua error tracebacks.
+- Separate Lua Editor: Windows syntax colouring, line numbers, F5 run, F7 syntax check, selection run and cooperative Stop.
+- Lua source modules, UTF-8 strings, scalar/vector/matrix results; local script trust and host lifecycle protections.
+- Lua integration tests and packaged demo; see docs/lua.md for API and current limitations.
+
 - FrequencyTrajectories object: named frequency tracks, CSV/TSV import/export, native Praat serialization.
 - Sound + FrequencyTrajectories editor: waveform, cached spectrogram, draggable points, Undo/Redo, playback.
 - Formant conversion to editable FrequencyTrajectories; example CSV and interactive demo.
