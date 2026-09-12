@@ -1,0 +1,23 @@
+param(
+    [string]$MsysRoot = 'C:\msys64',
+    [ValidateRange(1,64)][int]$Jobs = 2
+)
+$ErrorActionPreference = 'Stop'
+$bash = Join-Path $MsysRoot 'usr\bin\bash.exe'
+if (-not (Test-Path -LiteralPath $bash)) { throw "MSYS2 not found: $MsysRoot" }
+$previousSystem = $env:MSYSTEM
+$previousChere = $env:CHERE_INVOKING
+$previousJobs = $env:JOBS
+Push-Location $PSScriptRoot
+try {
+    $env:MSYSTEM = 'MINGW32'
+    $env:CHERE_INVOKING = '1'
+    $env:JOBS = [string]$Jobs
+    & $bash --login -c 'bash scripts/build-windows7-x86.sh'
+    if ($LASTEXITCODE -ne 0) { throw "Win7 x86 build failed ($LASTEXITCODE). See .local-build/win7-x86-build.log." }
+} finally {
+    Pop-Location
+    $env:MSYSTEM = $previousSystem
+    $env:CHERE_INVOKING = $previousChere
+    $env:JOBS = $previousJobs
+}

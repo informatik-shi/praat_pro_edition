@@ -166,3 +166,7 @@ See [HOW_TO_BUILD_ONE.md](HOW_TO_BUILD_ONE.md).
 ## 4. Developing Praat on all platforms simultaneously
 
 See [HOW_TO_BUILD_ALL.md](HOW_TO_BUILD_ALL.md).
+# Windows 7 32-bit
+
+Эта ветка `codex/windows7-x86` добавляет отдельную сборку для Windows 7 SP1
+и ASUS Eee PC 1025C. См. [инструкцию](BUILD_WINDOWS7_X86.md).

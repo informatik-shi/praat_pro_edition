@@ -249,6 +249,18 @@ else ifeq ($(OS_IS_WINDOWS),1)
     # also -m64 (for x64-v1, x64-v3 and arm64) and -march=xxx (if not set in ARCH_COMPILER_FLAGS).
   CFLAGS := -std=gnu99 $(SHARED_COMPILER_FLAGS)
   CXXFLAGS := -std=gnu++17 $(SHARED_COMPILER_FLAGS) -Wshadow
+  # Separate legacy profile: GCC/MSVCRT, Windows 7 API floor, no AVX.
+  ifeq ($(PRAAT_WIN7_X86),1)
+    ifneq ($(PRAAT_ARCH),i686)
+      $(error PRAAT_WIN7_X86 requires PRAAT_ARCH=i686)
+    endif
+    ifneq ($(WE_HAVE_GCC),1)
+      $(error PRAAT_WIN7_X86 requires PRAAT_COMPILER=gcc)
+    endif
+    CFLAGS += -m32 -O2 -DWINVER=0x0601 -D_WIN32_WINNT=0x0601 -DPRAAT_WIN7_X86=1
+    CXXFLAGS += -m32 -O2 -DWINVER=0x0601 -D_WIN32_WINNT=0x0601 -DPRAAT_WIN7_X86=1
+    NON_PRAAT_LIBRARIES += -m32 -Wl,--major-os-version,6,--minor-os-version,1,--major-subsystem-version,6,--minor-subsystem-version,1
+  endif
     # Note: gnu++17 instead of c++17 is necessary to define M_PI in external code.
 
   EXECUTABLE_FILE = Praat.exe
