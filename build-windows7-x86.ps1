@@ -8,11 +8,13 @@ if (-not (Test-Path -LiteralPath $bash)) { throw "MSYS2 not found: $MsysRoot" }
 $previousSystem = $env:MSYSTEM
 $previousChere = $env:CHERE_INVOKING
 $previousJobs = $env:JOBS
+$previousGit = $env:PRAAT_GIT
 Push-Location $PSScriptRoot
 try {
     $env:MSYSTEM = 'MINGW32'
     $env:CHERE_INVOKING = '1'
     $env:JOBS = [string]$Jobs
+    $env:PRAAT_GIT = (Get-Command git -CommandType Application).Source
     & $bash --login -c 'bash scripts/build-windows7-x86.sh'
     if ($LASTEXITCODE -ne 0) { throw "Win7 x86 build failed ($LASTEXITCODE). See .local-build/win7-x86-build.log." }
 } finally {
@@ -20,4 +22,5 @@ try {
     $env:MSYSTEM = $previousSystem
     $env:CHERE_INVOKING = $previousChere
     $env:JOBS = $previousJobs
+    $env:PRAAT_GIT = $previousGit
 }

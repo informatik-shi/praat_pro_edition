@@ -2,6 +2,9 @@
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 root="$PWD"
+if [[ -n "${PRAAT_GIT:-}" ]]; then
+    export PATH="$(dirname "$(cygpath -u "$PRAAT_GIT")"):$PATH"
+fi
 [[ "${MSYSTEM:-}" == MINGW32 ]] || { echo 'Use MSYS2 MINGW32.' >&2; exit 2; }
 [[ "$(gcc -dumpmachine)" == i686-w64-mingw32 ]] || { echo 'An i686 GCC toolchain is required.' >&2; exit 2; }
 jobs="${JOBS:-2}"
