@@ -1,5 +1,6 @@
 // Praat Custom. GPL-3.0-or-later. Lua itself retains its MIT license.
 #include "LuaRuntime.h"
+#include "luadebug/LuaDebugRun.h"
 #include "praatP.h"
 #include "Interpreter.h"
 #include "Formula.h"
@@ -16,6 +17,7 @@ struct Context {
     Interpreter interpreter;
     lua_State *mainThread=nullptr;
     std::function<bool()> *poll=nullptr;
+    LuaDebugSession *debugger=nullptr;
 };
 Context &context (lua_State *L) {
     return **static_cast<Context **>(lua_getextraspace (L));
@@ -159,14 +161,18 @@ int print (lua_State *L) {
 int noExit (lua_State *L) { return luaL_error (L, "os.exit is disabled in the Praat host"); }
 int noNativeModules (lua_State *L) { return luaL_error (L, "Native Lua modules are not supported in this static C++ host"); }
 int noHookReplacement (lua_State *L) { return luaL_error (L, "The execution hook is reserved for the Praat Stop command"); }
-void yieldHook (lua_State *L, lua_Debug *) {
+void yieldHook (lua_State *L, lua_Debug *event) {
     auto &host=context(L);
+    if(host.debugger&&event->event==LUA_HOOKLINE) {
+        if(!host.debugger->onLine(L,event))luaL_error(L,"Lua execution stopped");
+        return;
+    }
     if (L==host.mainThread && lua_isyieldable (L)) lua_yield (L,0);
     else if(host.poll && *host.poll && !(*host.poll)()) luaL_error(L,"Lua execution stopped");
 }
 }
 
-void Lua_run (conststring32 source, MelderFile file, bool checkOnly, std::function<bool()> poll) {
+static void Lua_runImpl (conststring32 source, MelderFile file, bool checkOnly, std::function<bool()> poll,LuaDebugSession *debugger) {
     if (running) Melder_throw (U"A Lua script is already running.");
     struct RunningGuard { RunningGuard(){running=true;} ~RunningGuard(){running=false;} } guard;
     autoInterpreterStack stack = InterpreterStack_create (nullptr);
@@ -193,14 +199,16 @@ void Lua_run (conststring32 source, MelderFile file, bool checkOnly, std::functi
     luaL_setfuncs(L,api,0); lua_setglobal(L,"praat");
     std::string text (Melder_peek32to8(source));
     std::string name = "@"; name += Melder_peek32to8(MelderFile_peekPath(file));
+    if(debugger)debugger->begin(name);
     lua_State *thread = lua_newthread (L);
     contextData.mainThread=thread;contextData.poll=&poll;
+    contextData.debugger=debugger;
     if (luaL_loadbufferx(thread,text.data(),text.size(),name.c_str(),"t") != LUA_OK) {
         auto error=Melder_8to32_e(lua_tostring(thread,-1));
         Melder_throw (error.get());
     }
     if (checkOnly) return;
-    lua_sethook (thread,yieldHook,LUA_MASKCOUNT,10000);
+    lua_sethook (thread,yieldHook,LUA_MASKCOUNT|(debugger?LUA_MASKLINE:0),10000);
     MelderInfo_open();
     int status, results=0;
     do {
@@ -210,9 +218,23 @@ void Lua_run (conststring32 source, MelderFile file, bool checkOnly, std::functi
     } while (status==LUA_YIELD);
     MelderInfo_close();
     if (status != LUA_OK) {
+        if(debugger)debugger->capture(thread,true);
         const char *message=lua_tostring(thread,-1);
         luaL_traceback(L,thread,message ? message : "Lua error (non-string value)",1);
         auto error=Melder_8to32_e(lua_tostring(L,-1));
         Melder_throw (error.get());
+    }
+}
+void Lua_run (conststring32 source,MelderFile file,bool checkOnly,std::function<bool()> poll) {
+    Lua_runImpl(source,file,checkOnly,std::move(poll),nullptr);
+}
+void Lua_runDebug(conststring32 source,MelderFile file,std::function<bool()> poll,LuaDebugSession &debugger) {
+    try {
+        Lua_runImpl(source,file,false,std::move(poll),&debugger);
+        debugger.state=LuaDebugState::Finished;debugger.thread=debugger.originThread=nullptr;
+    } catch(MelderError) {
+        if(debugger.state!=LuaDebugState::Stopped)debugger.state=LuaDebugState::Error;
+        debugger.error=Melder_peek32to8(Melder_getError());debugger.thread=debugger.originThread=nullptr;
+        throw;
     }
 }
