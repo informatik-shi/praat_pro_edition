@@ -17,7 +17,7 @@ try {
     & $bash --login -c 'bash scripts/build-windows.sh'
     if ($LASTEXITCODE -ne 0) { throw "Build failed ($LASTEXITCODE). See .local-build/build-windows.log." }
     if ($Test) {
-        & $bash --login -c 'bash scripts/test-trajectories.sh && bash scripts/test-debugger.sh && bash scripts/test-windows.sh'
+        & $bash --login -c 'bash scripts/test-lua.sh && bash scripts/test-trajectories.sh && bash scripts/test-debugger.sh && bash scripts/test-windows.sh'
         if ($LASTEXITCODE -ne 0) { throw "Tests failed ($LASTEXITCODE). See .local-build/." }
     }
     Write-Output 'Built: dist\praat-custom.exe'
