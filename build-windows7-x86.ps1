@@ -14,7 +14,7 @@ try {
     $env:MSYSTEM = 'MINGW32'
     $env:CHERE_INVOKING = '1'
     $env:JOBS = [string]$Jobs
-    $env:PRAAT_GIT = (Get-Command git -CommandType Application).Source
+    $env:PRAAT_GIT = (Get-Command git -CommandType Application | Select-Object -First 1).Source
     & $bash --login -c 'bash scripts/build-windows7-x86.sh'
     if ($LASTEXITCODE -ne 0) { throw "Win7 x86 build failed ($LASTEXITCODE). See .local-build/win7-x86-build.log." }
 } finally {
