@@ -38,3 +38,5 @@ cp tests/lua-debugger/demo.lua dist/examples/lua-debugger-demo.lua
 cp tests/lua-plot/demo.lua dist/examples/lua-plot-demo.lua
 cp tests/lua-plot/embedded-demo.lua dist/examples/lua-embedded-demo.lua
 cp tests/lua-plot/spectrogram-demo.lua dist/examples/lua-spectrogram-demo.lua
+mkdir -p dist/tutorials/lua-plots
+cp -R docs/tutorials/lua-plots/. dist/tutorials/lua-plots/

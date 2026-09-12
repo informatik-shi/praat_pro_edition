@@ -4,6 +4,9 @@
 matplotlib. Модуль встроен в EXE: Python, pip и отдельная установка Lua не нужны.
 Это небольшой собственный API, а не полная совместимость с matplotlib.
 
+Пошаговое обучение с готовыми файлами и заданиями:
+[Графики на Lua — практическая методичка](tutorials/lua-plots/README.md).
+
 Откройте `examples/lua-plot-demo.lua` через **Praat → Open Lua script...**
 и нажмите **F5**. Исходник примера: `tests/lua-plot/demo.lua`.
 
