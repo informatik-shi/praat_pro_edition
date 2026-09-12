@@ -1,6 +1,7 @@
 # Praat: doing phonetics by computer
 
 Custom Windows build: [Lua Editor and API](docs/lua.md),
+[Lua debugger](docs/lua-debugger.md),
 [code folding](docs/code-folding.md),
 [frequency trajectories](docs/frequency-trajectories.md),
 [build instructions](BUILD_WINDOWS.md), [custom changes](CHANGES_CUSTOM.md).

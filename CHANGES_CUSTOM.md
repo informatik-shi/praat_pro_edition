@@ -1,5 +1,10 @@
 # Changes relative to Praat 7.0.02
 
+- Windows Lua Editor debugger: F9/gutter breakpoints, F5 continue, F6 pause,
+  F10 over, F11 into, Shift+F11 out and Shift+F5 stop. Real Lua line hooks,
+  locals/upvalues/globals, call stack and error snapshot; folded destinations
+  expand automatically. See docs/lua-debugger.md for scope and acceptance.
+
 - Code folding in both Windows script editors: nested block markers, View menu,
   F8 toggle, Ctrl+F8 collapse all, Shift+F8 expand all; original source line numbers
   and automatic expansion at debugger/search destinations.
