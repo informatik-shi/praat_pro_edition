@@ -23,13 +23,19 @@
 
 Thing_define (SpectrogramEditor, FunctionEditor) {
 	DEFINE_FunctionArea (1, SpectrogramArea, spectrogramArea)
+	void v9_destroy () noexcept override;
+	void v_createMenus () override;
+	void v_draw () override;
+	bool hasLuaPanel ();
+	void clearLuaPlots ();
 	
 	void v1_dataChanged (Editor sender) override {
 		our SpectrogramEditor_Parent :: v1_dataChanged (sender);
+		clearLuaPlots ();
 		our spectrogramArea() -> functionChanged (static_cast <Spectrogram> (our data()));
 	}
 	void v_distributeAreas () override {
-		our spectrogramArea() -> setGlobalYRange_fraction (0.0, 1.0);
+		our spectrogramArea() -> setGlobalYRange_fraction (hasLuaPanel() ? 0.30 : 0.0, 1.0);
 	}
 };
 

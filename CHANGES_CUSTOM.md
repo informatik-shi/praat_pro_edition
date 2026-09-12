@@ -1,5 +1,9 @@
 # Changes relative to Praat 7.0.02
 
+- Embedded Lua plot panels and frequency overlays in Sound/LongSound and
+  Spectrogram editors. `plt.editors`, `fig:attach`, `plt.detach`, synchronized
+  time range, editor hide/remove menus and invalidation after source edits.
+
 - Built-in `require('praat.plot')`: figure/axes API, lines, scatter, bars,
   heatmaps, subplots, labels and legends; independent retained figure windows,
   mouse rectangle zoom, reset and PNG export. No Python or additional DLLs.

@@ -36,3 +36,5 @@ cp external/lua-5.5.1/doc/readme.html dist/LICENSE-Lua.html
 cp tests/lua/demo.lua dist/examples/
 cp tests/lua-debugger/demo.lua dist/examples/lua-debugger-demo.lua
 cp tests/lua-plot/demo.lua dist/examples/lua-plot-demo.lua
+cp tests/lua-plot/embedded-demo.lua dist/examples/lua-embedded-demo.lua
+cp tests/lua-plot/spectrogram-demo.lua dist/examples/lua-spectrogram-demo.lua

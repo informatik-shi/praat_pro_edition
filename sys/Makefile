@@ -16,7 +16,7 @@ OBJECTS = Thing.o Data.o Simple.o Collection.o Strings.o \
    praat.o praat_actions.o praat_menuCommands.o praat_picture.o \
    praat_script.o praat_statistics.o praat_logo.o praat_library.o \
    praat_objectMenus.o InfoEditor.o ScriptEditor.o NotebookEditor.o ButtonEditor.o \
-   luaplot/LuaPlot.o luaplot/PlotRenderer.o luaplot/PlotWindow.o luadebug/LuaDebugger.o CodeFolding.o LuaRuntime.o LuaEditor.o Interpreter.o Formula.o ScriptDebugger.o ScriptSyntax.o WinScriptEditor.o \
+   luaplot/PlotHost.o luaplot/LuaPlot.o luaplot/PlotRenderer.o luaplot/PlotWindow.o luadebug/LuaDebugger.o CodeFolding.o LuaRuntime.o LuaEditor.o Interpreter.o Formula.o ScriptDebugger.o ScriptSyntax.o WinScriptEditor.o \
    StringsEditor.o DemoEditor.o \
    motifEmulator.o GuiText.o GuiWindow.o Gui.o GuiObject.o GuiDrawingArea.o \
    GuiMenu.o GuiMenuItem.o GuiButton.o GuiLabel.o GuiCheckButton.o GuiRadioButton.o \
@@ -45,3 +45,4 @@ LuaRuntime.o LuaEditor.o luadebug/LuaDebugger.o: luadebug/LuaDebugger.h luadebug
 LuaRuntime.o luaplot/LuaPlot.o: luaplot/LuaPlot.h
 luaplot/LuaPlot.o luaplot/PlotRenderer.o luaplot/PlotWindow.o: luaplot/PlotModel.h
 luaplot/LuaPlot.o: luaplot/plot.lua.inc
+luaplot/PlotHost.o luaplot/LuaPlot.o: luaplot/PlotHost.h luaplot/PlotModel.h

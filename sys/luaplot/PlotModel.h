@@ -29,6 +29,7 @@ struct PlotFigure {
 struct PlotRect {double left,right,bottom,top;};
 PlotRect Plot_rect(const PlotFigure &,const PlotAxes &);
 void Plot_draw(Graphics,const PlotFigure &);
+void Plot_drawData(Graphics,const PlotAxes &,double xmin,double xmax,double ymin,double ymax);
 long Plot_show(PlotFigure,long existingId);
 void Plot_close(long id);
 #endif

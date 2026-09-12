@@ -25,9 +25,15 @@
 Thing_define (SoundEditor, FunctionEditor) {
 	DEFINE_FunctionArea (1, SoundArea, soundArea)
 	DEFINE_FunctionArea (2, SoundAnalysisArea, soundAnalysisArea)
+	void v9_destroy () noexcept override;
+	void v_createMenus () override;
+	bool hasLuaPanel ();
+	void drawLuaPlots ();
+	void clearLuaPlots ();
 
 	void v1_dataChanged (Editor sender) override {
 		SoundEditor_Parent :: v1_dataChanged (sender);
+		clearLuaPlots ();
 		Thing_cast (SampledXY, soundOrLongSound, our data());
 		our soundArea() -> functionChanged (soundOrLongSound);
 		our soundAnalysisArea() -> functionChanged (soundOrLongSound);
@@ -35,11 +41,12 @@ Thing_define (SoundEditor, FunctionEditor) {
 	void v_createMenuItems_help (EditorMenu menu)
 		override;
 	void v_distributeAreas () override {
+		const double bottom = hasLuaPanel() ? 0.30 : 0.0;
 		if (our soundAnalysisArea() -> hasContentToShow ()) {
-			our soundArea() -> setGlobalYRange_fraction (0.5, 1.0);
-			our soundAnalysisArea() -> setGlobalYRange_fraction (0.0, 0.5);
+			our soundArea() -> setGlobalYRange_fraction ((1.0 + bottom) / 2, 1.0);
+			our soundAnalysisArea() -> setGlobalYRange_fraction (bottom, (1.0 + bottom) / 2);
 		} else {
-			our soundArea() -> setGlobalYRange_fraction (0.0, 1.0);
+			our soundArea() -> setGlobalYRange_fraction (bottom, 1.0);
 			our soundAnalysisArea() -> setGlobalYRange_fraction (0.0, 0.0);
 		}
 	}
@@ -52,6 +59,7 @@ Thing_define (SoundEditor, FunctionEditor) {
 			FunctionArea_prepareCanvas (our soundAnalysisArea().get());
 			our soundAnalysisArea() -> v_draw_analysis ();
 		}
+		drawLuaPlots ();
 	}
 	void v_play (double startTime, double endTime) override {
 		SoundArea_play (our soundArea().get(), startTime, endTime);

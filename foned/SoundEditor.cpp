@@ -18,8 +18,23 @@
 
 #include "SoundEditor.h"
 #include "EditorM.h"
+#include "luaplot/PlotHost.h"
 
 Thing_implement (SoundEditor, FunctionEditor, 0);
+
+void structSoundEditor::v9_destroy() noexcept {PlotHost_remove(this);SoundEditor_Parent::v9_destroy();}
+void structSoundEditor::v_createMenus(){SoundEditor_Parent::v_createMenus();PlotHost_addMenu(this);}
+bool structSoundEditor::hasLuaPanel(){return PlotHost_panel(this);}
+void structSoundEditor::clearLuaPlots(){PlotHost_clear(this);}
+void structSoundEditor::drawLuaPlots(){
+    auto host=PlotHost_find(this);if(!host||!host->visible||(!host->panel&&!host->overlay))return;
+    auto area=soundAnalysisArea().get();double bottom=dataBottom_pxlt(),height=dataTop_pxlt()-bottom;
+    PlotRect overlay{dataLeft_pxlt(),dataRight_pxlt(),bottom,dataTop_pxlt()};
+    if(area->hasContentToShow()){FunctionArea_setViewport(area);Graphics_inqViewport(graphics.get(),&overlay.left,&overlay.right,&overlay.bottom,&overlay.top);}
+    PlotHost_draw(this,graphics.get(),{dataLeft_pxlt(),dataRight_pxlt(),bottom,bottom+.28*height},
+        overlay,
+        area->instancePref_spectrogram_viewFrom(),area->instancePref_spectrogram_viewTo(),area->instancePref_spectrogram_show());
+}
 
 static void menu_cb_SoundEditorHelp (SoundEditor, EDITOR_ARGS) { Melder_help (U"SoundEditor"); }
 static void menu_cb_LongSoundEditorHelp (SoundEditor, EDITOR_ARGS) { Melder_help (U"LongSoundEditor"); }
@@ -42,6 +57,8 @@ autoSoundEditor SoundEditor_create (conststring32 title, SampledXY soundOrLongSo
 			my soundArea() = LongSoundArea_create (false, nullptr, me.get());
 		my soundAnalysisArea() = SoundAnalysisArea_create (false, nullptr, me.get());
 		FunctionEditor_init (me.get(), title, soundOrLongSound);
+		auto host=me.get();
+		PlotHost_register(host,"SoundEditor",[host](){return PlotHostContext{host->tmin,host->tmax,host->startWindow,host->endWindow,host->startSelection,host->endSelection};},[host](){host->v_distributeAreas();FunctionEditor_redraw(host);});
 		return me;
 	} catch (MelderError) {
 		Melder_throw (U"Sound window not created.");

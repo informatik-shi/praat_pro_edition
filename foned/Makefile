@@ -19,6 +19,8 @@ OBJECTS = FrequencyTrajectoriesEditor.o SoundRecorder.o \
 
 all: libfoned.a
 
+SoundEditor.o SpectrogramEditor.o: ../sys/luaplot/PlotHost.h ../sys/luaplot/PlotModel.h
+
 clean:
 	$(RM) $(OBJECTS)
 	$(RM) libfoned.a

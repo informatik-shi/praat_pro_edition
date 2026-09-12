@@ -35,7 +35,15 @@ void Plot_draw(Graphics g,const PlotFigure &f) {
             label(g,r.left-.012/f.cols,r.bottom+t*h,tick(a.ymin+t*(a.ymax-a.ymin)),Graphics_RIGHT);
         }
         Graphics_setViewport(g,r.left,r.right,r.bottom,r.top);Graphics_setWindow(g,0,1,0,1);
-        auto X=[&](double x){return (x-a.xmin)/(a.xmax-a.xmin);};auto Y=[&](double y){return (y-a.ymin)/(a.ymax-a.ymin);};
+        Plot_drawData(g,a,a.xmin,a.xmax,a.ymin,a.ymax);
+        Graphics_setLineWidth(g,1);Graphics_setColour(g,Melder_BLACK);Graphics_rectangle(g,0,1,0,1);
+        if(a.legend){int row=0;Graphics_setFontSize(g,9);for(const auto &s:a.series)if(!s.label.empty()&&row<8){double y=.95-.07*row++;Graphics_setColour(g,Melder_WHITE);Graphics_fillRectangle(g,.62,.99,y-.03,y+.03);Graphics_setColour(g,s.colour);Graphics_line(g,.64,y,.71,y);Graphics_setColour(g,Melder_BLACK);label(g,.73,y,s.label,Graphics_LEFT);}}
+    }
+}
+
+void Plot_drawData(Graphics g,const PlotAxes &a,double xmin,double xmax,double ymin,double ymax) {
+    Graphics_setWindow(g,0,1,0,1);
+        auto X=[&](double x){return (x-xmin)/(xmax-xmin);};auto Y=[&](double y){return (y-ymin)/(ymax-ymin);};
         for(const auto &s:a.series) {
             Graphics_setColour(g,s.colour);Graphics_setLineWidth(g,s.width);
             if(s.kind=="heatmap") {
@@ -54,7 +62,4 @@ void Plot_draw(Graphics g,const PlotFigure &f) {
                 else if(s.kind=="bar") {double x1=std::max(0.,X(s.x[i]-s.barWidth/2)),x2=std::min(1.,X(s.x[i]+s.barWidth/2));double y1=std::max(0.,std::min(y,Y(0))),y2=std::min(1.,std::max(y,Y(0)));if(x1<x2&&y1<y2)Graphics_fillRectangle(g,x1,x2,y1,y2);}
             }
         }
-        Graphics_setLineWidth(g,1);Graphics_setColour(g,Melder_BLACK);Graphics_rectangle(g,0,1,0,1);
-        if(a.legend){int row=0;Graphics_setFontSize(g,9);for(const auto &s:a.series)if(!s.label.empty()&&row<8){double y=.95-.07*row++;Graphics_setColour(g,Melder_WHITE);Graphics_fillRectangle(g,.62,.99,y-.03,y+.03);Graphics_setColour(g,s.colour);Graphics_line(g,.64,y,.71,y);Graphics_setColour(g,Melder_BLACK);label(g,.73,y,s.label,Graphics_LEFT);}}
-    }
 }

@@ -3,6 +3,9 @@ local native = ...
 local M, Figure, Axes = {}, {}, {}
 Figure.__index, Axes.__index = Figure, Axes
 local palette = {'#1f77b4','#d62728','#2ca02c','#9467bd','#ff7f0e','#17becf'}
+M.editors=native.editors
+M.detach=native.detach
+function Figure:attach(editorId,target) native.attach(self,editorId,target or 'panel');return self end
 function M.figure(options)
     options = options or {}
     return setmetatable({rows=1,cols=1,title=options.title or 'Lua Figure',

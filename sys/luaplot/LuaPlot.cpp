@@ -1,6 +1,8 @@
 // Praat Custom. GPL-3.0-or-later.
 #include "LuaPlot.h"
 #include "PlotModel.h"
+#include "PlotHost.h"
+#include "praatP.h"
 #include "../../external/lua-5.5.1/src/lua.h"
 #include "../../external/lua-5.5.1/src/lauxlib.h"
 #include <algorithm>
@@ -74,6 +76,20 @@ PlotFigure parse(lua_State *L) {
     }lua_pop(L,1);return f;
 }
 int error(lua_State *L){lua_pushstring(L,Melder_peek32to8(Melder_getError()));Melder_clearError();return lua_error(L);}
+long hostId(lua_State *L,int index){lua_Integer id=luaL_checkinteger(L,index);if(id<1||id>2147483647)luaL_error(L,"Invalid plot editor id");return (long)id;}
+int editors(lua_State *L){
+    lua_newtable(L);int row=0;
+    for(auto h:PlotHost_all()){
+        auto c=h->context();lua_newtable(L);lua_pushinteger(L,h->id);lua_setfield(L,-2,"id");lua_pushstring(L,h->type.c_str());lua_setfield(L,-2,"type");
+        for(integer i=1;i<=theCurrentPraatObjects->n;++i)if(theCurrentPraatObjects->list[i].object==h->editor->data()){
+            lua_pushinteger(L,theCurrentPraatObjects->list[i].id);lua_setfield(L,-2,"object_id");lua_pushstring(L,Melder_peek32to8(theCurrentPraatObjects->list[i].name.get()));lua_setfield(L,-2,"name");break;}
+        auto number=[&](const char *key,double v){lua_pushnumber(L,v);lua_setfield(L,-2,key);};
+        number("tmin",c.tmin);number("tmax",c.tmax);number("start",c.start);number("finish",c.end);number("selection_start",c.selectionStart);number("selection_end",c.selectionEnd);
+        lua_pushboolean(L,h->panel!=nullptr);lua_setfield(L,-2,"has_panel");lua_pushboolean(L,h->overlay!=nullptr);lua_setfield(L,-2,"has_overlay");lua_rawseti(L,-2,++row);
+    }return 1;
+}
+int attach(lua_State *L){try{auto f=parse(L);long id=hostId(L,2);const char *target=luaL_optstring(L,3,"panel");PlotHost_attach(id,f,target);return 0;}catch(MelderError){return error(L);}}
+int detach(lua_State *L){try{long id=hostId(L,1);const char *target=luaL_optstring(L,2,"all");PlotHost_detach(id,target);return 0;}catch(MelderError){return error(L);}}
 int show(lua_State *L){try{auto f=parse(L);long id=(long)luaL_optinteger(L,2,0);if(Melder_batch)return luaL_error(L,"show() requires GUI; use savefig() in batch mode");lua_pushinteger(L,Plot_show(std::move(f),id));return 1;}catch(MelderError){return error(L);}}
 int close(lua_State *L){Plot_close((long)luaL_checkinteger(L,1));return 0;}
 int save(lua_State *L){try {
@@ -89,7 +105,7 @@ int open(lua_State *L) {
 #include "plot.lua.inc"
     ;
     if(luaL_loadbuffer(L,source,sizeof(source)-1,"@praat.plot")!=LUA_OK)return lua_error(L);
-    lua_newtable(L);const luaL_Reg functions[]={{"show",show},{"save",save},{"close",close},{nullptr,nullptr}};luaL_setfuncs(L,functions,0);
+    lua_newtable(L);const luaL_Reg functions[]={{"editors",editors},{"attach",attach},{"detach",detach},{"show",show},{"save",save},{"close",close},{nullptr,nullptr}};luaL_setfuncs(L,functions,0);
     lua_call(L,1,1);return 1;
 }
 }
