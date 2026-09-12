@@ -28,6 +28,9 @@
 
 ## API
 
+Для графиков используйте встроенный модуль `require('praat.plot')`:
+[Lua-визуализация, примеры и API](lua-plot.md).
+
 ```lua
 local sound = praat.call("Create Sound from formula",
     "tone", 1, 0, 1, 44100, "0.2*sin(2*pi*440*x)")

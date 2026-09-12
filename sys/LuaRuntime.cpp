@@ -1,5 +1,6 @@
 // Praat Custom. GPL-3.0-or-later. Lua itself retains its MIT license.
 #include "LuaRuntime.h"
+#include "luaplot/LuaPlot.h"
 #include "luadebug/LuaDebugRun.h"
 #include "praatP.h"
 #include "Interpreter.h"
@@ -187,6 +188,7 @@ static void Lua_runImpl (conststring32 source, MelderFile file, bool checkOnly, 
     Context contextData {interpreter.get()};
     *static_cast<Context **>(lua_getextraspace(L)) = &contextData;
     luaL_openlibs (L);
+    LuaPlot_install(L);
     lua_getglobal(L,"debug");lua_pushcfunction(L,noHookReplacement);lua_setfield(L,-2,"sethook");lua_pop(L,1);
     lua_pushcfunction (L, print); lua_setglobal (L,"print");
     lua_getglobal (L,"os"); lua_pushcfunction(L,noExit); lua_setfield(L,-2,"exit"); lua_pop(L,1);

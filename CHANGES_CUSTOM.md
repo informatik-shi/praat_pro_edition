@@ -1,5 +1,10 @@
 # Changes relative to Praat 7.0.02
 
+- Built-in `require('praat.plot')`: figure/axes API, lines, scatter, bars,
+  heatmaps, subplots, labels and legends; independent retained figure windows,
+  mouse rectangle zoom, reset and PNG export. No Python or additional DLLs.
+  See docs/lua-plot.md for the first-stage API and limits.
+
 - Windows Lua Editor debugger: F9/gutter breakpoints, F5 continue, F6 pause,
   F10 over, F11 into, Shift+F11 out and Shift+F5 stop. Real Lua line hooks,
   locals/upvalues/globals, call stack and error snapshot; folded destinations
