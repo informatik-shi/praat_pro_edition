@@ -17,6 +17,7 @@
  */
 
 #include "ScriptEditor.h"
+#include "codefold/CodeFolding.h"
 #include "machine.h"
 #include "../kar/longchar.h"
 #include "EditorM.h"
@@ -839,6 +840,10 @@ void structTextEditor :: v_createChildren () {
 	GuiText_setChangedCallback (textWidget, gui_text_cb_changed, this);
 }
 
+static void menu_cb_foldToggle(TextEditor me,EDITOR_ARGS) {CodeFolding_action(my textWidget,0);}
+static void menu_cb_foldAll(TextEditor me,EDITOR_ARGS) {CodeFolding_action(my textWidget,1);}
+static void menu_cb_unfoldAll(TextEditor me,EDITOR_ARGS) {CodeFolding_action(my textWidget,2);}
+
 void structTextEditor :: v_createMenus () {
 	TextEditor_Parent :: v_createMenus ();
 
@@ -869,6 +874,14 @@ void structTextEditor :: v_createMenus () {
 	Editor_addCommand (this, U"Edit", U"Shift left", '[', menu_cb_shiftLeft);
 
 	Editor_addMenu (this, U"Search", 0);
+	#if defined (_WIN32)
+	if(textWidget->flags & GuiText_SCRIPT_IDE) {
+		Editor_addMenu(this,U"View",0);
+		Editor_addCommand(this,U"View",U"Toggle code folding",GuiMenu_F8,menu_cb_foldToggle);
+		Editor_addCommand(this,U"View",U"Collapse all blocks",GuiMenu_COMMAND|GuiMenu_F8,menu_cb_foldAll);
+		Editor_addCommand(this,U"View",U"Expand all blocks",GuiMenu_SHIFT|GuiMenu_F8,menu_cb_unfoldAll);
+	}
+	#endif
 	Editor_addCommand (this, U"Search", U"Find...", 'F', menu_cb_find);
 	Editor_addCommand (this, U"Search", U"Find again", textWidget -> flags & GuiText_SCRIPT_IDE ? GuiMenu_F3 : 'G', menu_cb_findAgain);
 	Editor_addCommand (this, U"Search", U"Replace...", GuiMenu_COMMAND_EXTRA | 'F', menu_cb_replace);

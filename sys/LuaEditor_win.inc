@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include "codefold/CodeFolding.h"
 namespace {
 bool luaAlpha(wchar_t c) {return (c>=L'a'&&c<=L'z')||(c>=L'A'&&c<=L'Z');}
 bool luaDigit(wchar_t c) {return c>=L'0'&&c<=L'9';}
@@ -17,6 +18,7 @@ struct LuaView {
     std::wstring previous;
     std::vector<LuaColourSpan> spans;
     long oldFirst=-1;
+    unsigned long foldRevision=0;
     bool formatting=false;
     void scan (const std::wstring &s) {
         spans.clear();
@@ -63,6 +65,7 @@ struct LuaView {
     }
     void refresh() {
         if(formatting||editor->running)return;
+        CodeFolding_sync(editor->textWidget);
         RECT r;GetClientRect(text,&r);SetWindowPos(gutter,HWND_TOP,0,0,54,r.bottom,SWP_NOACTIVATE);
         InvalidateRect(gutter,nullptr,FALSE);
         if(!document)return;
@@ -72,7 +75,9 @@ struct LuaView {
         SendMessageW(text,EM_GETTEXTEX,(WPARAM)&get,(LPARAM)source.data());source.resize(n);
         long first=(long)SendMessageW(text,EM_GETFIRSTVISIBLELINE,0,0);
         bool edited=source!=previous;
-        if(!edited&&first==oldFirst)return;
+        auto revision=CodeFolding_revision(editor->textWidget);
+        if(!edited&&first==oldFirst&&revision==foldRevision)return;
+        foldRevision=revision;
         if(edited){scan(source);previous=std::move(source);}
         oldFirst=first;
         long start=(long)SendMessageW(text,EM_LINEINDEX,first,0);
@@ -97,10 +102,11 @@ LRESULT CALLBACK luaGutter(HWND window,UINT message,WPARAM wp,LPARAM lp,UINT_PTR
         PAINTSTRUCT paint;HDC dc=BeginPaint(window,&paint);RECT r;GetClientRect(window,&r);
         FillRect(dc,&r,(HBRUSH)(COLOR_BTNFACE+1));SetBkMode(dc,TRANSPARENT);SetTextColor(dc,RGB(105,110,120));
         auto old=SelectObject(dc,(HFONT)SendMessageW(self->text,WM_GETFONT,0,0));
-        long first=(long)SendMessageW(self->text,EM_GETFIRSTVISIBLELINE,0,0);
-        long count=(long)SendMessageW(self->text,EM_GETLINECOUNT,0,0);
+        long first=CodeFolding_firstVisible(self->editor->textWidget);
+        long count=CodeFolding_lineCount(self->editor->textWidget);
         for(long line=first;line<count;++line) {
-            long index=(long)SendMessageW(self->text,EM_LINEINDEX,line,0);POINTL pos;
+            if(CodeFolding_hiddenLine(self->editor->textWidget,line))continue;
+            long index=CodeFolding_lineStart(self->editor->textWidget,line);POINTL pos;
             SendMessageW(self->text,EM_POSFROMCHAR,(WPARAM)&pos,index);if(pos.y>r.bottom)break;
             std::wstring label=std::to_wstring(line+1);RECT row{0,pos.y,46,pos.y+24};DrawTextW(dc,label.c_str(),-1,&row,DT_RIGHT|DT_SINGLELINE|DT_NOPREFIX);
         }
@@ -129,8 +135,10 @@ static void createLuaView(LuaEditor editor) {
     self->gutter=CreateWindowW(L"STATIC",L"",WS_CHILD|WS_VISIBLE,0,0,54,100,self->text,nullptr,GetModuleHandleW(nullptr),nullptr);
     SetWindowSubclass(self->gutter,luaGutter,775,(DWORD_PTR)self);SetWindowSubclass(self->text,luaTextProc,775,(DWORD_PTR)self);
     SetTimer(self->text,775,180,nullptr);
+    CodeFolding_install(editor->textWidget,54,true);
 }
 static void destroyLuaView(LuaEditor editor) {
+    CodeFolding_destroy(editor->textWidget);
     auto it=luaViews.find(editor);if(it==luaViews.end())return;auto self=it->second;
     KillTimer(self->text,775);RemoveWindowSubclass(self->text,luaTextProc,775);DestroyWindow(self->gutter);
     if(self->document)self->document->Release();delete self;luaViews.erase(it);

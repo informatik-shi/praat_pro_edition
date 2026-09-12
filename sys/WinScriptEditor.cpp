@@ -3,6 +3,7 @@
 #include "ScriptEditor.h"
 #include "ScriptDebugger.h"
 #include "ScriptSyntax.h"
+#include "codefold/CodeFolding.h"
 #if defined (_WIN32)
 #include "GuiP.h"
 #include <richedit.h>
@@ -62,20 +63,17 @@ struct WinIDE final : ScriptDebugger {
         if(document) document->Release();
         if(font) DeleteObject(font);
     }
-    long lineStart (long line) { return (long)SendMessageW(text,EM_LINEINDEX,line-1,0); }
+    long lineStart (long line) { return CodeFolding_lineStart(editor->textWidget,line-1); }
     long caretLine () {
         CHARRANGE s; SendMessageW(text,EM_EXGETSEL,0,(LPARAM)&s);
-        return (long)SendMessageW(text,EM_EXLINEFROMCHAR,0,s.cpMin)+1;
+        CodeFolding_sync(editor->textWidget);
+        return CodeFolding_lineAt(editor->textWidget,s.cpMin)+1;
     }
     std::wstring lineText (long line) {
-        long start=lineStart(line); if(start<0)return L"";
-        long length=(long)SendMessageW(text,EM_LINELENGTH,start,0);
-        std::wstring result(std::min<long>(length,65534)+2,L'\0');
-        *reinterpret_cast<WORD*>(result.data())=(WORD)(result.size()-1);
-        auto n=SendMessageW(text,EM_GETLINE,line-1,(LPARAM)result.data());
-        result.resize(n);return result;
+        return CodeFolding_lineText(editor->textWidget,line-1);
     }
     void go (long line) {
+        CodeFolding_sync(editor->textWidget);
         long start=lineStart(line);if(start<0)return;
         CHARRANGE selection {start,start};SendMessageW(text,EM_EXSETSEL,0,(LPARAM)&selection);
         SendMessageW(text,EM_SCROLLCARET,0,0); coloured.clear(); refresh();
@@ -84,7 +82,7 @@ struct WinIDE final : ScriptDebugger {
         breakpoints.clear();
         for(auto &a:anchors) {
             long position=0;
-            if(a.range&&SUCCEEDED(a.range->GetStart(&position))) a.line=(long)SendMessageW(text,EM_EXLINEFROMCHAR,0,position)+1;
+            if(a.range&&SUCCEEDED(a.range->GetStart(&position))) a.line=CodeFolding_lineAt(editor->textWidget,position)+1;
             breakpoints.insert(a.line);
         }
     }
@@ -246,9 +244,10 @@ struct WinIDE final : ScriptDebugger {
     }
     void refresh () {
         if(formatting||!IsWindow(text))return;
+        CodeFolding_sync(editor->textWidget);
         fileChanged();syncAnchors();
         CHARRANGE selection;SendMessageW(text,EM_EXGETSEL,0,(LPARAM)&selection);
-        long line=(long)SendMessageW(text,EM_EXLINEFROMCHAR,0,selection.cpMin)+1;
+        long line=CodeFolding_lineAt(editor->textWidget,selection.cpMin)+1;
         long column=selection.cpMin-lineStart(line)+1;
         const wchar_t *stateName=state==ScriptDebugState::Paused?L"Paused":state==ScriptDebugState::Running?L"Running":state==ScriptDebugState::Error?L"Error":state==ScriptDebugState::Finished?L"Finished":L"Idle";
         std::wstring label=L"Ln "+std::to_wstring(line)+L", Col "+std::to_wstring(column)+L"    |    "+stateName+L"    |    F9 breakpoint  F5 run/continue  F10 over  F11 into";
@@ -266,15 +265,16 @@ struct WinIDE final : ScriptDebugger {
         RECT r;GetClientRect(text,&r);
         // RichEdit may scroll child windows with its document; the gutter stays pinned.
         SetWindowPos(gutter,HWND_TOP,0,0,64,r.bottom,SWP_NOACTIVATE);
-        long first=(long)SendMessageW(text,EM_GETFIRSTVISIBLELINE,0,0)+1;
-        long count=(long)SendMessageW(text,EM_GETLINECOUNT,0,0);
+        long first=CodeFolding_firstVisible(editor->textWidget)+1;
+        long count=CodeFolding_lineCount(editor->textWidget);
         HDC dc=GetDC(text);HFONT old=(HFONT)SelectObject(dc,(HFONT)SendMessageW(text,WM_GETFONT,0,0));TEXTMETRICW tm;GetTextMetricsW(dc,&tm);SelectObject(dc,old);ReleaseDC(text,dc);
-        long last=std::min(count,first+r.bottom/std::max(1L,tm.tmHeight)+2);
+        long last=std::min(count,CodeFolding_lastVisible(editor->textWidget,first-1,r.bottom/std::max(1L,tm.tmHeight)+2)+1);
         bool redraw=first!=oldFirst||selection.cpMin!=oldCaret||count!=oldCount;
         oldFirst=first;oldCaret=selection.cpMin;oldCount=count;
         if(!document){InvalidateRect(gutter,nullptr,FALSE);return;}
         bool needsFormat=false;
         for(long n=first;n<=last;++n) {
+            if(CodeFolding_hiddenLine(editor->textWidget,n-1))continue;
             auto found=coloured.find(n);
             if(found==coloured.end()||found->second!=std::make_pair(lineText(n),n==shownLine)){needsFormat=true;break;}
         }
@@ -285,6 +285,7 @@ struct WinIDE final : ScriptDebugger {
         auto mask=SendMessageW(text,EM_SETEVENTMASK,0,0);
         document->Undo(tomSuspend,nullptr);SendMessageW(text,WM_SETREDRAW,FALSE,0);
         for(long n=first;n<=last;++n) {
+            if(CodeFolding_hiddenLine(editor->textWidget,n-1))continue;
             auto source=lineText(n);bool currentLineHighlight=(n==shownLine);
             auto found=coloured.find(n);
             if(found!=coloured.end()&&found->second==std::make_pair(source,currentLineHighlight))continue;
@@ -294,7 +295,7 @@ struct WinIDE final : ScriptDebugger {
             for(auto &span:ScriptSyntax_scan(source))formatRange(start+(long)span.start,start+(long)(span.start+span.length),theme.colour(span.token),bg);
             coloured[n]={source,currentLineHighlight};redraw=true;
         }
-        if(coloured.size()>256) {auto keep=std::move(coloured);coloured.clear();for(long n=first;n<=last;++n)coloured[n]=std::move(keep[n]);}
+        if(coloured.size()>256) {auto keep=std::move(coloured);coloured.clear();for(long n=first;n<=last;++n)if(!CodeFolding_hiddenLine(editor->textWidget,n-1))coloured[n]=std::move(keep[n]);}
         SendMessageW(text,EM_EXSETSEL,0,(LPARAM)&selection);
         SendMessageW(text,EM_SETSCROLLPOS,0,(LPARAM)&scroll);
         SendMessageW(text,EM_SETMODIFY,modified,0);
@@ -310,16 +311,18 @@ LRESULT CALLBACK gutterProc(HWND window,UINT message,WPARAM wp,LPARAM lp,UINT_PT
     if(message==WM_LBUTTONDOWN) {
         POINTL point {70,(short)HIWORD(lp)};
         long position=(long)SendMessageW(self->text,EM_CHARFROMPOS,0,(LPARAM)&point);
-        self->toggle((long)SendMessageW(self->text,EM_EXLINEFROMCHAR,0,position)+1);return 0;
+        CodeFolding_sync(self->editor->textWidget);
+        self->toggle(CodeFolding_lineAt(self->editor->textWidget,position)+1);return 0;
     }
     if(message==WM_PAINT) {
         PAINTSTRUCT ps;HDC dc=BeginPaint(window,&ps);RECT r;GetClientRect(window,&r);
         HBRUSH bg=CreateSolidBrush(self->theme.gutter);FillRect(dc,&r,bg);DeleteObject(bg);
         SetBkMode(dc,TRANSPARENT);SetTextColor(dc,self->theme.number);
         auto old=SelectObject(dc,(HFONT)SendMessageW(self->text,WM_GETFONT,0,0));
-        long first=(long)SendMessageW(self->text,EM_GETFIRSTVISIBLELINE,0,0)+1;
-        long count=(long)SendMessageW(self->text,EM_GETLINECOUNT,0,0);
+        long first=CodeFolding_firstVisible(self->editor->textWidget)+1;
+        long count=CodeFolding_lineCount(self->editor->textWidget);
         for(long line=first;line<=count;++line) {
+            if(CodeFolding_hiddenLine(self->editor->textWidget,line-1))continue;
             POINTL point;SendMessageW(self->text,EM_POSFROMCHAR,(WPARAM)&point,self->lineStart(line));
             if(point.y>r.bottom)break;
             std::wstring label=std::to_wstring(line);
@@ -392,8 +395,10 @@ void WinScriptEditor_create (ScriptEditor editor) {
     SetWindowSubclass(self->text,textProc,1,(DWORD_PTR)self);
     SetWindowSubclass(self->shell,shellProc,771,(DWORD_PTR)self);
     SetTimer(self->text,771,100,nullptr);self->layout();self->showPanel();
+    CodeFolding_install(editor->textWidget,64,false);
 }
 void WinScriptEditor_destroy (ScriptEditor editor) {
+    CodeFolding_destroy(editor->textWidget);
     auto it=editors.find(editor);if(it==editors.end())return;auto self=it->second;
     self->lock(false);KillTimer(self->text,771);
     RemoveWindowSubclass(self->shell,shellProc,771);RemoveWindowSubclass(self->text,textProc,1);
