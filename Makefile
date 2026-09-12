@@ -406,7 +406,7 @@ all: all-external all-self
 		external/opusfile/libopusfile.a \
 		external/whispercpp/libwhisper.a \
 		external/blake3/libblake3.a \
-		external/zlib/libzlib.a \
+		external/zlib/libzlib.a external/lua-5.5.1/liblua.a \
                $(NON_PRAAT_LIBRARIES) $(LDFLAGS)
 
 all-external:
@@ -424,6 +424,7 @@ all-external:
 	$(MAKE) -C external/whispercpp
 	$(MAKE) -C external/blake3
 	$(MAKE) -C external/zlib
+	$(MAKE) -C external/lua-5.5.1 -f praat.mk
 
 all-self:
 	$(MAKE) -C kar
@@ -460,6 +461,7 @@ clean-external:
 	$(MAKE) -C external/whispercpp clean
 	$(MAKE) -C external/blake3 clean
 	$(MAKE) -C external/zlib clean
+	$(MAKE) -C external/lua-5.5.1 -f praat.mk clean
 
 clean-self:
 	$(MAKE) -C kar clean

@@ -41,6 +41,7 @@
 #include "machine.h"
 #include "Printer.h"
 #include "ScriptEditor.h"
+#include "LuaEditor.h"
 #include "NotebookEditor.h"
 #include "Strings_.h"
 #include "../kar/UnicodeData.h"
@@ -867,7 +868,7 @@ FORM (DO_Quit, U"Confirm Quit", U"Quit") {
 	OK
 {
 	const bool youHaveObjectsInYourList = ( theCurrentPraatObjects -> n > 0 );
-	const bool youHaveUnsavedScriptsOrNotebooks = ( ScriptEditors_dirty () || NotebookEditors_dirty () );
+	const bool youHaveUnsavedScriptsOrNotebooks = ( ScriptEditors_dirty () || NotebookEditors_dirty () || LuaEditors_dirty () );
 	if (youHaveObjectsInYourList || youHaveUnsavedScriptsOrNotebooks) {
 		if (youHaveObjectsInYourList && youHaveUnsavedScriptsOrNotebooks)
 			SET_STRING (label1, U"You have objects in your list, and unsaved scripts or notebooks!")

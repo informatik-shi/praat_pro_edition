@@ -20,6 +20,8 @@
 #include "praatM.h"
 #include "praat_script.h"
 #include "ScriptEditor.h"
+#include "LuaEditor.h"
+#include "LuaRuntime.h"
 #include "NotebookEditor.h"
 #include "ButtonEditor.h"
 #include "DataEditor.h"
@@ -142,6 +144,31 @@ DIRECT (PRAAT__About) {
 	PRAAT
 		praat_showLogo ();
 	PRAAT_END
+}
+
+DIRECT (PRAAT__newLua) {
+	PRAAT
+		autoLuaEditor editor = LuaEditor_create();
+		editor.releaseToUser();
+	PRAAT_END
+}
+DIRECT (PRAAT__openLua) {
+	PRAAT
+		autoLuaEditor editor = LuaEditor_create();
+		TextEditor_showOpen(editor.get());
+		editor.releaseToUser();
+	PRAAT_END
+}
+FORM (PRAAT__runLua, U"Run Lua file", nullptr) {
+	INFILE (luaFile, U"Lua file", U"")
+	OK
+DO
+	structMelderFile file {};
+	Melder_relativePathToFile (luaFile, &file);
+	Melder_checkTrust (interpreter, U"run Lua with local file and process access\n", &file);
+	auto source = MelderFile_readText (&file);
+	Lua_run (source.get(), &file);
+END_NO_NEW_DATA
 }
 
 DIRECT (PRAAT__newScript) {
@@ -850,6 +877,9 @@ void praat_addMenus (GuiWindow window) {
 		#endif
 	#endif
 	praat_addMenuCommand (U"Objects", U"Praat", U"-- script --", nullptr, 0, nullptr);
+	praat_addMenuCommand (U"Objects", U"Praat", U"New Lua script", nullptr, GuiMenu_NO_API, PRAAT__newLua);
+	praat_addMenuCommand (U"Objects", U"Praat", U"Open Lua script...", nullptr, GuiMenu_NO_API, PRAAT__openLua);
+	praat_addMenuCommand (U"Objects", U"Praat", U"Run Lua file...", nullptr, 0, PRAAT__runLua);
 	praat_addMenuCommand (U"Objects", U"Praat", U"New Praat script", nullptr, GuiMenu_NO_API,
 			PRAAT__newScript);
 	praat_addMenuCommand (U"Objects", U"Praat", U"New Praat notebook", nullptr, GuiMenu_NO_API,
