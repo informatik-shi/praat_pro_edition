@@ -1,6 +1,6 @@
 # Changes relative to Praat 7.0.02
 
-- Separate `codex/windows7-x86` branch and Windows 7 SP1 x86 build profile
+- Separate `develop` branch and Windows 7 SP1 x86 build profile
   (GCC/MINGW32/MSVCRT, i686, subsystem 6.1). Fixed Windows callback calling
   conventions in both script editors. Isolated build, x86 integration tests,
   portable package and matching source archive. See BUILD_WINDOWS7_X86.md.

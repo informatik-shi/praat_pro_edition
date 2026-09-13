@@ -9,7 +9,7 @@ Custom Windows build: [Lua Editor and API](docs/lua.md),
 [build instructions](BUILD_WINDOWS.md), [custom changes](CHANGES_CUSTOM.md).
 
 Windows 7 SP1 32-bit / ASUS Eee PC: [отдельная сборка](BUILD_WINDOWS7_X86.md)
-в ветке `codex/windows7-x86`.
+в ветке `develop`.
 
 Welcome to Praat! Praat is a speech analysis tool used for doing phonetics by computer.
 Praat can analyse, synthesize, and manipulate speech, and create high-quality pictures for your publications.
@@ -171,5 +171,5 @@ See [HOW_TO_BUILD_ONE.md](HOW_TO_BUILD_ONE.md).
 See [HOW_TO_BUILD_ALL.md](HOW_TO_BUILD_ALL.md).
 # Windows 7 32-bit
 
-Эта ветка `codex/windows7-x86` добавляет отдельную сборку для Windows 7 SP1
+Эта ветка `develop` добавляет отдельную сборку для Windows 7 SP1
 и ASUS Eee PC 1025C. См. [инструкцию](BUILD_WINDOWS7_X86.md).
