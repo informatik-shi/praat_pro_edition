@@ -9,7 +9,29 @@
 4. Добавлены отдельные PowerShell/Bash скрипты: сборка чистого снимка Git
    в новой игнорируемой папке, batch-тесты, аудит DLL и упаковка исходников.
 5. Создана инструкция по запуску, сборке и ограничениям памяти нетбука.
-   Результаты фактической сборки и проверок будут записаны после выполнения.
+6. Первая сборка выявила несовместимость lambda с WNDENUMPROC на x86:
+   в LuaEditor и WinScriptEditor заменены callbacks на static BOOL CALLBACK.
+   Исправление `b10c7d529`; без -fpermissive и без отключения отладчиков.
+7. В начальной оболочке MINGW32 отсутствовал git в PATH. PowerShell теперь
+   передаёт путь первого найденного Git for Windows (установлено несколько).
+8. После ошибки внешние библиотеки были доскомпилированы, исправленные файлы
+   скопированы в изолированную папку. `make all-self` и последующая линковка
+   с тем же профилем завершились успешно. Логи: win7-x86-build.log,
+   win7-x86-self.log, win7-x86-link.log, win7-x86-finish.log в .local-build.
+9. Перед упаковкой файлы снимка сверены SHA-256 с checkout `b10c7d529`;
+   файлы с Unicode-именами проверены отдельно. Исключены только .gitignore и
+   .gitattributes согласно upstream export-ignore. Соответствующие исходники
+   сохранены `git archive b10c7d529` в dist/praat-win7-x86-source.zip.
+10. 2026-09-13: EXE успешно запущен, Praat 7.0.02. PASS: Lua/API, plot/PNG,
+    FrequencyTrajectories, fold model, оба debugger runners, plot host runner.
+    Дополнительно штатные Sound_to_Spectrogram, Formant, FormantGrid: exit 0.
+11. PE i386, subsystem 6.1; 11 системных DLL, без UCRT/MSYS/GCC DLL.
+    SHA-256 EXE: 2ed15564eb65c18f71929b0e84ec75ecbd56f39d0996c2048c8411897b3f169e.
+    Артефакт: dist/windows7-x86/praat-win7-x86.exe. Подготовлен переносимый ZIP.
+12. Исходная x64-сборка dist/praat-custom.exe сохранила SHA-256
+    1816f5bd01bb688f1db0388fb819b14242d8dcbc73fc3a20d325563a937b5c3e.
+    Windows 7 SP1 и физический ASUS недоступны в этой среде: GUI, звук и
+    производительность на устройстве требуют проверки пользователем.
 
 ## 2026-09-12 — Методичка по построению графиков на Lua
 

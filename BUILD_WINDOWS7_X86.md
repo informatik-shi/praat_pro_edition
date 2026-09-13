@@ -62,6 +62,22 @@ SHA-256, точный коммит, версии инструментов, им�
 На целевом ASUS нужно отдельно проверить запуск окон, звук, RichEdit,
 точки останова и сворачивание, PNG и слои спектрограммы.
 
+### Результат сборки 2026-09-13
+
+- Исходный коммит EXE: `b10c7d529c9877974e2dfd880dc635db70e03673`.
+- GCC 16.2.0, MINGW32; PE i386; subsystem 6.1. Размер EXE: 99 939 344 байт.
+- SHA-256: `2ed15564eb65c18f71929b0e84ec75ecbd56f39d0996c2048c8411897b3f169e`.
+- PASS: Lua/API, Lua plotting/PNG, FrequencyTrajectories, fold model,
+  Praat debugger, Lua debugger, Lua plot host.
+- PASS: штатные Sound_to_Spectrogram, Formant, FormantGrid.
+- Импорты: ADVAPI32, COMCTL32, COMDLG32, GDI32, gdiplus, KERNEL32,
+  msvcrt, ole32, SHELL32, USER32, WINMM; UCRT/MSYS/GCC DLL не требуются.
+- Проверки выполнены на текущем компьютере разработчика. Запуск и GUI на
+  Windows 7 SP1 / ASUS Eee PC 1025C пока **не проверены**.
+
+`SOURCE-COMMIT.txt` указывает коммит кода конкретного EXE; последующие коммиты
+ветки могут дополнять отчёт и инструкции без изменения бинарного файла.
+
 Основания выбора MSVCRT/MINGW32:
 [MSYS2 — Windows support](https://www.msys2.org/docs/windows_support/),
 [MSYS2 — environments](https://www.msys2.org/docs/environments/).
