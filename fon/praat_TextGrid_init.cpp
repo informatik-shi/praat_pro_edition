@@ -27,6 +27,7 @@
 #include "TextGrid_extensions.h"
 #include "TextGrid_Sound.h"
 #include "WordList.h"
+#include "seg/SegReader.h"
 
 #include "praat_TimeTier.h"
 #include "praat_uvafon_init.h"
@@ -1678,6 +1679,26 @@ DO
 
 // MARK: Open
 
+FORM (READ_ONE__TextGrid_readSegFiles, U"Read SEG files", nullptr) {
+	INFILE (segFilePath, U"SEG file path", U"")
+	SENTENCE (levels, U"Levels (empty = all except G1)", U"")
+	OPTIONMENU (encoding, U"Encoding", 1)
+		OPTION (U"UTF-8")
+		OPTION (U"Windows-1251")
+		OPTION (U"UTF-16LE")
+		OPTION (U"UTF-16BE")
+		OPTION (U"KOI8-R")
+		OPTION (U"CP866")
+		OPTION (U"ISO-8859-1")
+	OK
+DO
+	CREATE_ONE
+		structMelderFile file {};
+		Melder_relativePathToFile (segFilePath, & file);
+		autoTextGrid result = TextGrid_readSegFiles (& file, levels, static_cast<SegEncoding>(encoding));
+	CREATE_ONE_END (U"")
+}
+
 FORM (READ_ONE__TextGrid_readFromEspsLabelFile, U"Read TextGrid from ESPS label file", U"Read TextGrid from ESPS label file...") {
 	INFILE (soundFilePath, U"Sound file path", U"")
 	BOOLEAN (tiersArePointTiers, U"Tiers are point tiers", false)
@@ -1958,6 +1979,7 @@ void praat_uvafon_TextGrid_init () {
 			nullptr, 0, NEW1_Corpus_create);
 
 	praat_addMenuCommand (U"Objects", U"Open", U"-- open textgrid --", nullptr, 0, nullptr);
+	praat_addMenuCommand (U"Objects", U"Open", U"Read SEG files...", nullptr, 0, READ_ONE__TextGrid_readSegFiles);
 	praat_addMenuCommand (U"Objects", U"Open", U"Read from special annotation file...", nullptr, 0, nullptr);
 		praat_addMenuCommand (U"Objects", U"Open", U"Read TextGrid from Xwaves... || Read TextGrid from ESPS label file...",
 				nullptr, 1, READ_ONE__TextGrid_readFromEspsLabelFile);

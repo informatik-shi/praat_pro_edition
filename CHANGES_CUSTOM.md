@@ -1,5 +1,9 @@
 # Changes relative to Praat 7.0.02
 
+- Read SEG files: grouped SpeechTechn annotations to IntervalTier TextGrid,
+  tier selection excluding G1 unless explicitly requested, seven selectable
+  encodings (UTF-8 by default), strict validation and Unicode labels.
+
 - Separate `develop` branch and Windows 7 SP1 x86 build profile
   (GCC/MINGW32/MSVCRT, i686, subsystem 6.1). Fixed Windows callback calling
   conventions in both script editors. Isolated build, x86 integration tests,

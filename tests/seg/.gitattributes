@@ -1,0 +1,2 @@
+# Preserve exact encodings, BOM and CRLF, including deliberately invalid bytes.
+*.seg_* binary
