@@ -8,6 +8,12 @@
    командный тест и создание TextGrid ранее прошли на x64/x86.
 3. Подготовлен отдельный предварительный релиз с понятными названиями EXE
    для двух архитектур, исходниками, контрольными суммами и руководством.
+4. Опубликован GitHub Release `v7.0.02-pro-seg.1` (prerelease):
+   `praat-seg-x64.exe`, `praat-seg-win7-x86.exe`, общий ZIP, архив исходников
+   и `SHA256SUMS.txt`. GitHub подтвердил размеры и SHA-256 всех пяти файлов;
+   релиз открыт по адресу
+   https://github.com/informatik-shi/praat_pro_edition/releases/tag/v7.0.02-pro-seg.1.
+
 ## 2026-09-30 — Импорт SEG в TextGrid и выбор кодировки
 
 1. Изучены SegReader.py, SegDict.py, DescriptorReader.py, DescriptorWriter.py
