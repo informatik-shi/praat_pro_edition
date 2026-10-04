@@ -20,7 +20,17 @@
    не прерываются внутри операции; другие команды Praat недоступны, пока
    выполняется скрипт, поскольку состояние объектов не изолировано.
 5. x64-сборка прошла. Lua CLI (`test.lua` и `--run test.lua`), Lua debugger,
-   Praat debugger integration и SEG — PASS; GUI Stop Lua/Praat — PASS.
+   Praat debugger integration, SEG, Lua plot, plot host, trajectories и folding
+   — PASS; GUI Stop Lua/Praat — PASS. EXE: `dist/praat-custom.exe`, SHA-256
+   `3b14c0a959b1b173d814dc96e9386ca39053eb5d9776b122c6c1796fe58b2c4e`.
+6. Из коммита `fea212938` выполнена чистая x86-сборка для Windows 7 SP1.
+   На x86 EXE прошли оба запуска Lua CLI, Lua, Lua plot, trajectories, SEG,
+   folding, оба отладчика и plot host. Отдельный GUI-тест Stop Lua/Praat
+   также прошёл. Проверены PE i386 и зависимости только от системных DLL,
+   без дополнительных runtime. EXE: `dist/windows7-x86/praat-win7-x86.exe`,
+   SHA-256 `03df53097e4925727373e04f876c163f2f6bd5d55b8eb78bce2c8bb5e9671e05`.
+   ZIP и архив исходников сохранены в `dist`. Реальная Windows 7 на устройстве
+   пользователя в этой среде не проверялась.
 
 ## 2026-10-04 — Встроенный LuaFileSystem
 
