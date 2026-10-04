@@ -15,6 +15,15 @@
 5. x64-сборка и SEG, folding, Lua debugger, Lua, Lua plot, plot host,
    trajectories, debugger integration — PASS. Общий тест Praat остановлен на
    длительном `textioSpeed.praat`; это не тест LuaFileSystem.
+6. Из коммита `356a96419` выполнена чистая x86-сборка для Windows 7 SP1.
+   На самом x86 EXE прошли Lua (включая `require("lfs")`), Lua plot,
+   trajectories, SEG, folding, debugger integration, Lua debugger и plot host.
+   Проверены PE i386 и отсутствие дополнительных runtime DLL. Реальная
+   Windows 7 на устройстве пользователя не проверялась.
+7. Опубликован prerelease `v7.0.02-pro-lfs.1` с x64/x86 EXE, Windows ZIP,
+   архивом исходников из `e55931195`, лицензиями и SHA256SUMS.txt:
+   https://github.com/informatik-shi/praat_pro_edition/releases/tag/v7.0.02-pro-lfs.1.
+   GitHub подтвердил размер и SHA-256 каждого из семи файлов.
 
 ## 2026-09-30 — Уточнение загрузки версии с SEG
 
