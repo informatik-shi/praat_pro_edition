@@ -1,5 +1,14 @@
 assert(_VERSION == "Lua 5.5")
 assert(require("module").value == 42)
+local lfs = require("lfs")
+assert(lfs._VERSION == "LuaFileSystem 1.9.0")
+assert(type(lfs.currentdir()) == "string")
+assert(lfs.attributes("module.lua", "mode") == "file")
+local found = false
+for name in lfs.dir(".") do
+    if name == "module.lua" then found = true end
+end
+assert(found)
 local sound = praat.call("Create Sound from formula", "lua tone", 1, 0, 1, 44100, "0.2*sin(2*pi*440*x)")
 assert(type(sound) == "table" and #sound == 1)
 assert(praat.call("Get number of samples") == 44100)

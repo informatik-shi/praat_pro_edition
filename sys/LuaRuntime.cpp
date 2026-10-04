@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+extern "C" int luaopen_lfs (lua_State *L);
+
 namespace {
 bool running = false;
 struct Context {
@@ -188,6 +190,8 @@ static void Lua_runImpl (conststring32 source, MelderFile file, bool checkOnly, 
     Context contextData {interpreter.get()};
     *static_cast<Context **>(lua_getextraspace(L)) = &contextData;
     luaL_openlibs (L);
+    luaL_requiref (L, "lfs", luaopen_lfs, 1);
+    lua_pop (L, 1);
     LuaPlot_install(L);
     lua_getglobal(L,"debug");lua_pushcfunction(L,noHookReplacement);lua_setfield(L,-2,"sethook");lua_pop(L,1);
     lua_pushcfunction (L, print); lua_setglobal (L,"print");

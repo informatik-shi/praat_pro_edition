@@ -1,5 +1,8 @@
 # Changes relative to Praat 7.0.02
 
+- Embedded LuaFileSystem 1.9.0: `require("lfs")` works in Lua Editor and
+  `Run Lua file` without a separate DLL. See docs/lua.md.
+
 - Read SEG files: grouped SpeechTechn annotations to IntervalTier TextGrid,
   tier selection excluding G1 unless explicitly requested, seven selectable
   encodings (UTF-8 by default), strict validation and Unicode labels.

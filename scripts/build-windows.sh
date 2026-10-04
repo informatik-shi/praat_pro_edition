@@ -33,6 +33,7 @@ cp docs/lua-debugger.md dist/
 cp docs/lua-plot.md dist/
 cp docs/code-folding.md dist/
 cp external/lua-5.5.1/doc/readme.html dist/LICENSE-Lua.html
+cp external/luafilesystem-1.9.0/LICENSE dist/LICENSE-LuaFileSystem.txt
 cp tests/lua/demo.lua dist/examples/
 cp tests/lua-debugger/demo.lua dist/examples/lua-debugger-demo.lua
 cp tests/lua-plot/demo.lua dist/examples/lua-plot-demo.lua
