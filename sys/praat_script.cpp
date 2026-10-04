@@ -20,6 +20,7 @@
 #include "praat_script.h"
 #include "UiPause.h"
 #include "DemoEditor.h"
+#include "LuaRuntime.h"
 
 static integer praat_findObjectFromString (Interpreter interpreter, conststring32 string) {
 	try {
@@ -671,6 +672,10 @@ void praat_executeScriptFromCommandLine (conststring32 fileName, integer argc, c
 	structMelderFile file { };
 	Melder_relativePathToFile (fileName, & file);
 	try {
+		if (Melder_endsWith_caseAware (fileName, U".lua")) {
+			Lua_runFileFromCommandLine (& file, argc, argv);
+			return;
+		}
 		autostring32 text = MelderFile_readText (& file);
 		{// scope
 			autoMelderFileSetCurrentFolder folder (& file);   // so that script-relative file names can be used for including include files

@@ -6,4 +6,5 @@
 // poll returns false to cancel; called between Lua instruction slices.
 void Lua_run (conststring32 source, MelderFile file, bool checkOnly = false,
     std::function<bool()> poll = {});
+void Lua_runFileFromCommandLine (MelderFile file, integer argc, char **argv);
 #endif

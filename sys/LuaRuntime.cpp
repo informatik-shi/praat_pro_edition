@@ -5,6 +5,7 @@
 #include "praatP.h"
 #include "Interpreter.h"
 #include "Formula.h"
+#include "ScriptExecution.h"
 #include "../external/lua-5.5.1/src/lua.h"
 #include "../external/lua-5.5.1/src/lauxlib.h"
 #include "../external/lua-5.5.1/src/lualib.h"
@@ -175,7 +176,8 @@ void yieldHook (lua_State *L, lua_Debug *event) {
 }
 }
 
-static void Lua_runImpl (conststring32 source, MelderFile file, bool checkOnly, std::function<bool()> poll,LuaDebugSession *debugger) {
+static void Lua_runImpl (conststring32 source, MelderFile file, bool checkOnly, std::function<bool()> poll,LuaDebugSession *debugger,
+    integer argc = -1, char **argv = nullptr) {
     if (running) Melder_throw (U"A Lua script is already running.");
     struct RunningGuard { RunningGuard(){running=true;} ~RunningGuard(){running=false;} } guard;
     autoInterpreterStack stack = InterpreterStack_create (nullptr);
@@ -203,6 +205,15 @@ static void Lua_runImpl (conststring32 source, MelderFile file, bool checkOnly, 
     lua_newtable (L);
     const luaL_Reg api[] = {{"call",call},{"select",selectObjects},{"selected",selected},{"objects",objects},{nullptr,nullptr}};
     luaL_setfuncs(L,api,0); lua_setglobal(L,"praat");
+    if (argc >= 0) {
+        lua_newtable (L);
+        pushText (L, MelderFile_peekPath (file)); lua_rawseti (L, -2, 0);
+        for (integer i = 0; i < argc; ++ i) {
+            pushText (L, Melder_peek8to32_u (argv [i]));
+            lua_rawseti (L, -2, i + 1);
+        }
+        lua_setglobal (L, "arg");
+    }
     std::string text (Melder_peek32to8(source));
     std::string name = "@"; name += Melder_peek32to8(MelderFile_peekPath(file));
     if(debugger)debugger->begin(name);
@@ -214,6 +225,8 @@ static void Lua_runImpl (conststring32 source, MelderFile file, bool checkOnly, 
         Melder_throw (error.get());
     }
     if (checkOnly) return;
+    ScriptExecutionScope execution (! poll);
+    if (! poll && ! Melder_batch) poll = [&execution] { return execution.poll(); };
     lua_sethook (thread,yieldHook,LUA_MASKCOUNT|(debugger?LUA_MASKLINE:0),10000);
     MelderInfo_open();
     int status, results=0;
@@ -233,6 +246,10 @@ static void Lua_runImpl (conststring32 source, MelderFile file, bool checkOnly, 
 }
 void Lua_run (conststring32 source,MelderFile file,bool checkOnly,std::function<bool()> poll) {
     Lua_runImpl(source,file,checkOnly,std::move(poll),nullptr);
+}
+void Lua_runFileFromCommandLine (MelderFile file, integer argc, char **argv) {
+    auto source = MelderFile_readText (file);
+    Lua_runImpl (source.get(), file, false, {}, nullptr, argc, argv);
 }
 void Lua_runDebug(conststring32 source,MelderFile file,std::function<bool()> poll,LuaDebugSession &debugger) {
     try {

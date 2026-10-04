@@ -23,6 +23,7 @@
 #include "DemoEditor.h"
 #include "Formula.h"
 #include "Notebook.h"
+#include "ScriptExecution.h"
 #include "../kar/UnicodeData.h"
 
 #include "../fon/Vector.h"
@@ -2344,6 +2345,7 @@ void Interpreter_run (Interpreter me, autostring32 text, const bool reuseVariabl
 }
 
 void Interpreter_resume (Interpreter me) {
+	ScriptExecutionScope execution (! my debugger);
 	/*
 		Start.
 	*/
@@ -2367,6 +2369,10 @@ void Interpreter_resume (Interpreter me) {
 			//trace (U"line ", lineNumber, U": ", lines [lineNumber]);
 		//}
 		for (; my lineNumber <= numberOfLines; my lineNumber ++) {
+			if (! my debugger && ! execution.poll ()) {
+				Interpreter_stop (me);
+				break;
+			}
 			trace (U"considering to handle line ", my lineNumber, U": ", my lines [my lineNumber], U", stopped ", my stopped, U", halted ", my isHalted, U", pass ", 1 + my isInSecondPass);
 			if (my stopped)
 				break;

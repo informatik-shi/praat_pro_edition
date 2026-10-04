@@ -1105,7 +1105,7 @@ static void printHelp () {
 	MelderInfo_writeLine (U"   To start up Praat with a new GUI:");
 	MelderInfo_writeLine (U"      praat [OPTION]...");
 	MelderInfo_writeLine (U"");
-	MelderInfo_writeLine (U"   To run a Praat script without a GUI:");
+	MelderInfo_writeLine (U"   To run a Praat or Lua script without a GUI:");
 	MelderInfo_writeLine (U"      praat [--run] [OPTION]... SCRIPT-FILE-NAME [SCRIPT-ARGUMENT]...");
 	MelderInfo_writeLine (U"   The switch --run is superfluous when you use a Console or Terminal");
 	MelderInfo_writeLine (U"   interactively, but necessary if you call Praat programmatically.");

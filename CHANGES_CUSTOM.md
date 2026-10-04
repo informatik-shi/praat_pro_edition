@@ -1,5 +1,11 @@
 # Changes relative to Praat 7.0.02
 
+- Ordinary Praat scripts and Lua files launched from the GUI have a shared
+  cooperative Stop window. Praat statements and Lua instruction slices poll it;
+  native commands complete before cancellation. Direct `praat test.lua` and
+  `praat --run test.lua` execute Lua with an `arg` table for script arguments.
+  See docs/lua.md.
+
 - Embedded LuaFileSystem 1.9.0: `require("lfs")` works in Lua Editor and
   `Run Lua file` without a separate DLL. See docs/lua.md.
 
