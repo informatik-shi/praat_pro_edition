@@ -1,0 +1,27 @@
+local call = praat.call
+local sound = call('Read sbl file', 'sample.sbl')
+assert(#sound == 1)
+praat.select(sound)
+assert(call('Get sampling frequency') == 22050)
+assert(call('Get number of samples') == 4)
+local function near(actual, expected)
+    assert(math.abs(actual - expected) < 1e-12, tostring(actual) .. ' != ' .. tostring(expected))
+end
+near(call('Get value at sample number', 1, 1), 0)
+near(call('Get value at sample number', 1, 2), 32767 / 32768)
+near(call('Get value at sample number', 1, 3), -1)
+near(call('Get value at sample number', 1, 4), 8192 / 32768)
+call('Remove')
+
+local grid = call('Read seg files', '../seg/sample.seg_B1', 'B1', 'UTF-8')
+assert(#grid == 1)
+praat.select(grid)
+assert(call('Get tier name', 1) == 'B1')
+call('Remove')
+
+local oldGrid = call('Read SEG files', '../seg/sample.seg_B1', 'B1', 'UTF-8')
+assert(#oldGrid == 1)
+praat.select(oldGrid)
+assert(call('Get tier name', 1) == 'B1')
+call('Remove')
+print('PRO TESTS: PASS')

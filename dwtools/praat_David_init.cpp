@@ -6172,6 +6172,12 @@ FORM_READ (READ_ONE__Sound_readFromRawFileLE, U"Read Sound from raw Little Endia
 	READ_ONE_END
 }
 
+FORM_READ (READ_ONE__Sound_readSblFile, U"Read sbl file", nullptr, true) {
+	READ_ONE
+		autoSound result = Sound_readFromRawFile (file, nullptr, 16, true, false, 0, 22050.0);
+	READ_ONE_END
+}
+
 FORM_READ (READ_ONE__Sound_readFromRawFileBE, U"Read Sound from raw 16-bit Little Endian file", nullptr, true) {
 	READ_ONE
 		autoSound result = Sound_readFromRawFile (file, nullptr, 16, 0, 0, 0, 16000.0);
@@ -9135,6 +9141,7 @@ void praat_David_init () {
 	praat_addMenuCommand (U"Objects", U"New", U"Create FileInMemorySet from directory contents...", nullptr, GuiMenu_HIDDEN | GuiMenu_DEPTH_1,
 			CREATE_ONE__FileInMemorySet_createFromDirectoryContents);
 
+	praat_addMenuCommand (U"Objects", U"Pro", U"Read sbl file...", nullptr, 0, READ_ONE__Sound_readSblFile);
 	praat_addMenuCommand (U"Objects", U"Open", U"Read Sound from raw 16-bit Little Endian file...", U"Read from special sound file", 1, 
 			READ_ONE__Sound_readFromRawFileLE);
 	praat_addMenuCommand (U"Objects", U"Open", U"Read Sound from raw 16-bit Big Endian file...", U"Read Sound from raw 16-bit Little Endian file...", 1,

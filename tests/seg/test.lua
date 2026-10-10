@@ -1,6 +1,6 @@
 local call=praat.call
 local function read(file,levels,encoding)
-    local ids=call('Read SEG files',file,levels or '',encoding or 'UTF-8')
+    local ids=call('Read seg files',file,levels or '',encoding or 'UTF-8')
     assert(#ids==1)
     praat.select(ids)
     return ids

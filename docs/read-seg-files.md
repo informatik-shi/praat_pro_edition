@@ -1,6 +1,6 @@
-# Read SEG files → TextGrid
+# Read seg files → TextGrid
 
-Команда **Objects → Open → Read SEG files...** читает разметку SpeechTechn
+Команда **Objects → Pro → Read seg files...** читает разметку SpeechTechn
 и создаёт один TextGrid. Python для импорта не нужен.
 
 ## Параметры
@@ -33,22 +33,25 @@ Praat Script:
 
 ```praat
 # UTF-8; все соседние уровни, кроме G1
-Read SEG files: "C:/data/record.seg_B1", "", "UTF-8"
+Read seg files: "C:/data/record.seg_B1", "", "UTF-8"
 # Только два уровня из старых файлов SpeechTechn
-Read SEG files: "C:/data/record.seg_B1", "B1 R1", "Windows-1251"
+Read seg files: "C:/data/record.seg_B1", "B1 R1", "Windows-1251"
 # Все уровни, включая G1
-Read SEG files: "C:/data/record.seg_B1", "* G1", "UTF-8"
+Read seg files: "C:/data/record.seg_B1", "* G1", "UTF-8"
 Save as text file: "C:/data/record.TextGrid"
 ```
 
 Lua:
 
 ```lua
-local grid = praat.call("Read SEG files",
+local grid = praat.call("Read seg files",
     "C:/data/record.seg_B1", "B1 R1", "UTF-8")
 praat.select(grid)
 praat.call("Save as text file", "C:/data/record.TextGrid")
 ```
+
+Старое имя `Read SEG files` продолжает работать в существующих скриптах, но
+старый пункт в меню Open скрыт.
 
 ## Формат и преобразование
 

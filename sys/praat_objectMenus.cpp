@@ -115,7 +115,7 @@ DIRECT (PRAAT__Inspect) {
 
 /********** The fixed menus. **********/
 
-static GuiMenu praatMenu, editMenu, windowMenu, newMenu, readMenu, goodiesMenu, preferencesMenu, technicalMenu, applicationHelpMenu, helpMenu;
+static GuiMenu praatMenu, editMenu, windowMenu, newMenu, readMenu, proMenu, goodiesMenu, preferencesMenu, technicalMenu, applicationHelpMenu, helpMenu;
 
 GuiMenu praat_objects_resolveMenu (conststring32 menu) {
 	return
@@ -126,6 +126,7 @@ GuiMenu praat_objects_resolveMenu (conststring32 menu) {
 		#endif
 		str32equ (menu, U"New") || str32equ (menu, U"Create") ? newMenu :
 		str32equ (menu, U"Open") || str32equ (menu, U"Read") ? readMenu :
+		str32equ (menu, U"Pro") ? proMenu :
 		str32equ (menu, U"Help") ? helpMenu :
 		str32equ (menu, U"Goodies") ? goodiesMenu :
 		str32equ (menu, U"Settings") || str32equ (menu, U"Preferences") ? preferencesMenu :
@@ -846,6 +847,7 @@ void praat_addMenus (GuiWindow window) {
 		newMenu = GuiMenu_createInWindow (window, U"New", 0);
 		readMenu = GuiMenu_createInWindow (window, U"Open", 0);
 		praat_actions_createWriteMenu (window);
+		proMenu = GuiMenu_createInWindow (window, U"Pro", 0);
 		#ifdef macintosh
 			applicationHelpMenu = GuiMenu_createInWindow (nullptr, U"Help", 0);
 		#endif

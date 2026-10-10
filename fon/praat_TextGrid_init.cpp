@@ -1679,7 +1679,7 @@ DO
 
 // MARK: Open
 
-FORM (READ_ONE__TextGrid_readSegFiles, U"Read SEG files", nullptr) {
+FORM (READ_ONE__TextGrid_readSegFiles, U"Read seg files", nullptr) {
 	INFILE (segFilePath, U"SEG file path", U"")
 	SENTENCE (levels, U"Levels (empty = all except G1)", U"")
 	OPTIONMENU (encoding, U"Encoding", 1)
@@ -1979,7 +1979,8 @@ void praat_uvafon_TextGrid_init () {
 			nullptr, 0, NEW1_Corpus_create);
 
 	praat_addMenuCommand (U"Objects", U"Open", U"-- open textgrid --", nullptr, 0, nullptr);
-	praat_addMenuCommand (U"Objects", U"Open", U"Read SEG files...", nullptr, 0, READ_ONE__TextGrid_readSegFiles);
+	praat_addMenuCommand (U"Objects", U"Pro", U"Read seg files...", nullptr, 0, READ_ONE__TextGrid_readSegFiles);
+	praat_addMenuCommand (U"Objects", U"Open", U"Read SEG files...", nullptr, GuiMenu_HIDDEN, READ_ONE__TextGrid_readSegFiles);
 	praat_addMenuCommand (U"Objects", U"Open", U"Read from special annotation file...", nullptr, 0, nullptr);
 		praat_addMenuCommand (U"Objects", U"Open", U"Read TextGrid from Xwaves... || Read TextGrid from ESPS label file...",
 				nullptr, 1, READ_ONE__TextGrid_readFromEspsLabelFile);

@@ -27,6 +27,7 @@ bash scripts/test-lua.sh
 bash scripts/test-lua-plot.sh
 bash scripts/test-trajectories.sh
 bash scripts/test-seg.sh
+bash scripts/test-pro.sh
 bash scripts/test-smart-spectrogram.sh
 bash scripts/test-windows7-x86.sh
 objdump -p Praat-win7-x86.exe > .local-build/pe-imports.txt
@@ -42,10 +43,11 @@ cp BUILD_WINDOWS7_X86.md README.md CHANGES_CUSTOM.md "$release/"
 cp docs/manual/General_Public_License__version_3.html "$release/LICENSE-GPL-3.html"
 cp external/lua-5.5.1/doc/readme.html "$release/LICENSE-Lua.html"
 cp external/luafilesystem-1.9.0/LICENSE "$release/LICENSE-LuaFileSystem.txt"
-cp docs/read-seg-files.md docs/lua.md docs/lua-debugger.md docs/lua-plot.md docs/code-folding.md docs/frequency-trajectories.md docs/smart-spectrogram.md "$release/"
+cp docs/read-seg-files.md docs/pro-menu.md docs/lua.md docs/lua-debugger.md docs/lua-plot.md docs/code-folding.md docs/frequency-trajectories.md docs/smart-spectrogram.md "$release/"
 cp -R docs/tutorials/lua-plots/. "$release/tutorials/lua-plots/"
 cp tests/trajectories/tracks.csv tests/trajectories/demo.praat "$release/examples/"
 cp tests/smart-spectrogram/irregular.csv "$release/examples/smart-spectrogram.csv"
+cp tests/pro/sample.sbl "$release/examples/sample.sbl"
 cp tests/lua-plot/demo.lua "$release/examples/lua-plot-demo.lua"
 cp tests/lua-plot/embedded-demo.lua "$release/examples/lua-embedded-demo.lua"
 cp tests/lua-plot/spectrogram-demo.lua "$release/examples/lua-spectrogram-demo.lua"

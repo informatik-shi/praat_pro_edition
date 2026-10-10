@@ -27,9 +27,11 @@ cp README.md CHANGES_CUSTOM.md BUILD_WINDOWS.md dist/
 cp docs/manual/General_Public_License__version_3.html dist/LICENSE-GPL-3.html
 cp docs/frequency-trajectories.md dist/
 cp docs/smart-spectrogram.md dist/
+cp docs/pro-menu.md dist/
 mkdir -p dist/examples
 cp tests/trajectories/tracks.csv tests/trajectories/demo.praat dist/examples/
 cp tests/smart-spectrogram/irregular.csv dist/examples/smart-spectrogram.csv
+cp tests/pro/sample.sbl dist/examples/sample.sbl
 cp docs/lua.md dist/
 cp docs/lua-debugger.md dist/
 cp docs/lua-plot.md dist/
