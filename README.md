@@ -1,6 +1,7 @@
 # Praat: doing phonetics by computer
 
 Custom Windows build: [Read SEG files](docs/read-seg-files.md), [Lua Editor and API](docs/lua.md),
+[SmartSpectrogram](docs/smart-spectrogram.md),
 [Lua debugger](docs/lua-debugger.md),
 [Lua plotting](docs/lua-plot.md),
 [практическая методичка Lua](docs/tutorials/lua-plots/README.md),

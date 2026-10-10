@@ -2997,6 +2997,7 @@ void praat_uvafon_init () {
 	praat_uvafon_TextGrid_init ();
 	praat_Tiers_init ();
 	{ extern void praat_FrequencyTrajectories_init(); praat_FrequencyTrajectories_init(); }
+	{ extern void praat_SmartSpectrogram_init(); praat_SmartSpectrogram_init(); }
 
 	praat_addMenuCommand (U"Objects", U"New", U"-- new stats --",
 			nullptr, 0, nullptr);

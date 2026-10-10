@@ -1,5 +1,10 @@
 # Changes relative to Praat 7.0.02
 
+- SmartSpectrogram object with explicit, irregular frame times and a common
+  frequency grid; UTF-8 CSV/TSV import/export, smooth time interpolation,
+  Sound editor, editable bin values, and persistent Pitch, Intensity and
+  FrequencyTrajectories overlays. See docs/smart-spectrogram.md.
+
 - Ordinary Praat scripts and Lua files launched from the GUI have a shared
   cooperative Stop window. Praat statements and Lua instruction slices poll it;
   native commands complete before cancellation. Direct `praat test.lua` and
