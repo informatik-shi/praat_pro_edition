@@ -23,6 +23,19 @@
    подтвердил открытие View & Edit с Sound и всеми наложениями. Регрессии
    trajectories, Lua и SEG — PASS. Исправлены версии вложенных Pitch и
    Intensity при чтении бинарного SmartSpectrogram.
+6. Из коммита `3a06759fc` выполнена чистая x86-сборка для Windows 7 SP1.
+   Новый тест SmartSpectrogram, Lua, Lua plot, trajectories, SEG, folding,
+   оба отладчика и plot host — PASS. Отдельный GUI-smoke-test SmartSpectrogram
+   с Sound и тремя наложениями на x86 — PASS. Проверены формат PE i386 и
+   зависимости только от системных DLL. Реальный компьютер пользователя с
+   Windows 7 пока не проверен.
+7. Готовые файлы: `dist/praat-custom.exe` (x64, SHA-256
+   `0fa72219c55d5a44ab479468e8c70c593192042293b3d3143c5dc4cc3f809c17`)
+   и `dist/windows7-x86/praat-win7-x86.exe` (SHA-256
+   `68a0b5365ac2d97758aaaca129438497cc28556ce9e102ff33abc0d1b98d771a`).
+   Пакет x86: `dist/praat-win7-x86.zip`; архив исходников из того же коммита:
+   `dist/praat-win7-x86-source.zip`. EXE в GitHub Release в этом шаге не
+   публиковались; исходники отправлены в `develop`.
 
 ## 2026-10-04 — Остановка скриптов и запуск Lua из командной строки
 
