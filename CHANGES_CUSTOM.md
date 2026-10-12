@@ -1,5 +1,19 @@
 # Changes relative to Praat 7.0.02
 
+- Sound editors explain unavailable spectrogram analysis in the plot, including
+  an analysis window that is too long for the sound, instead of silently leaving
+  an empty background. Reducing the window length restores the spectrum.
+
+- Combined View & Edit selected for Sound, FrequencyTrajectories, and optional
+  TextGrid, SmartSpectrogram, and Spectrogram. It retains SoundEditor menus and
+  normal sound analysis, displays TextGrid as a reference tier, edits trajectory
+  points over the selected spectrum, and switches between Smart and ordinary
+  spectrogram backgrounds. See docs/combined-editor.md.
+
+- Example Praat scripts for G1 period spectra and formant trajectories, short
+  segment spectra, and recursive R2/Y1 measurements are included in the
+  Windows release packages under `examples/`.
+
 - Objects window Pro menu, immediately after Save: Read seg files and Read sbl
   file. SBL imports signed mono 16-bit little-endian raw samples at 22050 Hz.
   The previous SEG command name remains available to older scripts.

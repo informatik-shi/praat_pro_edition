@@ -66,6 +66,7 @@ DO
     QUERY_ONE_FOR_REAL_END (U" dB")
 }
 void praat_SmartSpectrogram_init () {
+    structSmartSpectrogramArea::f_preferences ();
     Thing_recognizeClassesByName (classSmartSpectrogram);
     praat_addMenuCommand (U"Objects", U"Open", U"Read SmartSpectrogram from CSV/TSV...", nullptr, 0, READ_SmartSpectrogram);
     praat_addAction1 (classSmartSpectrogram, 1, U"View & Edit", nullptr, GuiMenu_ATTRACTIVE, EDIT_SmartSpectrogram);

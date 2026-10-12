@@ -4,6 +4,8 @@
 #include "FrequencyTrajectories.h"
 #include "FrequencyTrajectoriesEditor.h"
 #include "Formant.h"
+#include "SmartSpectrogram.h"
+#include "ProSoundEditor.h"
 #include <cmath>
 FORM_READ(READ_FrequencyTrajectories,U"Read frequency trajectories from CSV or TSV",nullptr,true){
     READ_ONE
@@ -35,6 +37,40 @@ DIRECT(EDIT_FrequencyTrajectories){
     EDITOR_ONE_WITH_ONE(a,FrequencyTrajectories,Sound)
         autoFrequencyTrajectoriesEditor editor=FrequencyTrajectoriesEditor_create(ID_AND_FULL_NAME,me,you);
     EDITOR_ONE_WITH_ONE_END
+}
+DIRECT(EDIT_FrequencyTrajectories_SmartSpectrogram){
+    EDITOR_ONE_WITH_ONE(a,FrequencyTrajectories,SmartSpectrogram)
+        autoFrequencyTrajectoriesEditor editor=FrequencyTrajectoriesEditor_create(ID_AND_FULL_NAME,me,nullptr,you);
+    EDITOR_ONE_WITH_ONE_END
+}
+DIRECT(EDIT_FrequencyTrajectories_SmartSpectrogram_Sound){
+    EDITOR_ONE_WITH_ONE_AND_ONE(a,FrequencyTrajectories,SmartSpectrogram,Sound)
+        autoFrequencyTrajectoriesEditor editor=FrequencyTrajectoriesEditor_create(ID_AND_FULL_NAME,me,him,you);
+    EDITOR_ONE_WITH_ONE_AND_ONE_END
+}
+DIRECT(EDIT_Pro_selected){
+    if(theCurrentPraatApplication->batch)
+        Melder_throw(U"Cannot open the selected objects in an editor from batch.");
+    Sound sound=nullptr;
+    TextGrid grid=nullptr;
+    FrequencyTrajectories tracks=nullptr;
+    SmartSpectrogram smart=nullptr;
+    Spectrogram spectrogram=nullptr;
+    integer IOBJECT;
+    LOOP {
+        if(CLASS==classSound){Melder_require(!sound,U"Select only one Sound.");sound=(Sound)OBJECT;}
+        else if(CLASS==classTextGrid){Melder_require(!grid,U"Select only one TextGrid.");grid=(TextGrid)OBJECT;}
+        else if(CLASS==classFrequencyTrajectories){Melder_require(!tracks,U"Select only one FrequencyTrajectories.");tracks=(FrequencyTrajectories)OBJECT;}
+        else if(CLASS==classSmartSpectrogram){Melder_require(!smart,U"Select only one SmartSpectrogram.");smart=(SmartSpectrogram)OBJECT;}
+        else if(CLASS==classSpectrogram){Melder_require(!spectrogram,U"Select only one Spectrogram.");spectrogram=(Spectrogram)OBJECT;}
+        else Melder_throw(U"The combined editor supports Sound, TextGrid, FrequencyTrajectories, SmartSpectrogram and Spectrogram.");
+    }
+    Melder_require(sound&&tracks,U"Select one Sound and one FrequencyTrajectories object for the combined editor.");
+    autoProSoundEditor editor=ProSoundEditor_create(Melder_cat(U"Sound ",Thing_getName(sound),U" + selected layers"),sound,grid,tracks,smart,spectrogram);
+    autoCollection selected=praat_getSelectedObjects();
+    praat_installEditorN(editor.get(),reinterpret_cast<DaataList>(selected.get()));
+    editor.releaseToUser();
+    END_NO_NEW_DATA
 }
 FORM(MODIFY_FrequencyTrajectories_add,U"Add trajectory point",nullptr){
     NATURAL(track,U"Trajectory number",U"1")
@@ -71,6 +107,10 @@ void praat_FrequencyTrajectories_init(){
     praat_addMenuCommand(U"Objects",U"New",U"Create FrequencyTrajectories...",nullptr,0,NEW_FrequencyTrajectories);
     praat_addAction1(classFrequencyTrajectories,1,U"View & Edit",nullptr,GuiMenu_ATTRACTIVE,EDIT_FrequencyTrajectories);
     praat_addAction2(classFrequencyTrajectories,1,classSound,1,U"View & Edit",nullptr,GuiMenu_ATTRACTIVE,EDIT_FrequencyTrajectories);
+    praat_addAction2(classFrequencyTrajectories,1,classSmartSpectrogram,1,U"View & Edit",nullptr,GuiMenu_ATTRACTIVE,EDIT_FrequencyTrajectories_SmartSpectrogram);
+    praat_addAction3(classFrequencyTrajectories,1,classSmartSpectrogram,1,classSound,1,U"View & Edit",nullptr,GuiMenu_ATTRACTIVE,EDIT_FrequencyTrajectories_SmartSpectrogram_Sound);
+    praat_addAction1(classDaata,0,U"View & Edit selected",nullptr,GuiMenu_ATTRACTIVE,EDIT_Pro_selected);
+    praat_addMenuCommand(U"Objects",U"Pro",U"View & Edit selected",nullptr,0,EDIT_Pro_selected);
     praat_addAction1(classFrequencyTrajectories,1,U"Save as CSV file...",nullptr,0,SAVE_FrequencyTrajectories_csv);
     praat_addAction1(classFrequencyTrajectories,1,U"Save as TSV file...",nullptr,0,SAVE_FrequencyTrajectories_tsv);
     praat_addAction1(classFrequencyTrajectories,0,U"Add point...",nullptr,0,MODIFY_FrequencyTrajectories_add);

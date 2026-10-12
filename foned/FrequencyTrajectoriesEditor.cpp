@@ -12,6 +12,7 @@ void structFrequencyTrajectoriesEditor::v1_dataChanged(Editor sender) {
     FrequencyTrajectories_validate(object);
     auto area=trajectoriesArea().get();area->trajectories=object;
     if(soundArea()){soundArea()->functionChanged(nullptr);area->backgroundSound=soundArea()->sound();}
+    area->backgroundSmart=backgroundSmartCopy.get();
     area->selectedTrack=Melder_clipped(1_integer,area->selectedTrack,object->numberOfTracks);
     area->functionChanged(object->tracks.at[area->selectedTrack]);
     // Parent redraws immediately: rebind tiers (including after Undo) before it paints.
@@ -22,17 +23,50 @@ void structFrequencyTrajectoriesEditor::v_drawLegends() {
     FunctionArea_drawLegend(area,Melder_cat(U"##",area->selectedTrack,U": ",area->trajectories->trackNames[area->selectedTrack].get(),U" — drag points; Trajectory menu selects track"),Melder_RED);
     if(soundArea())FunctionArea_drawLegend(soundArea().get(),U"Sound (reference copy); Play selection to listen",Melder_BLACK);
 }
-autoFrequencyTrajectoriesEditor FrequencyTrajectoriesEditor_create(conststring32 title,FrequencyTrajectories tracks,Sound sound) {
+autoFrequencyTrajectoriesEditor FrequencyTrajectoriesEditor_create(conststring32 title,FrequencyTrajectories tracks,Sound sound,SmartSpectrogram smart) {
     FrequencyTrajectories_validate(tracks);
     if(sound)Melder_require(tracks->xmin>=sound->xmin&&tracks->xmax<=sound->xmax,U"Trajectory time domain must lie within the selected Sound; times are absolute seconds, no automatic offset is applied.");
+    if(smart){
+        SmartSpectrogram_validate(smart);
+        Melder_require(smart->xmax>=tracks->xmin&&smart->xmin<=tracks->xmax,U"SmartSpectrogram and FrequencyTrajectories time domains must overlap.");
+    }
     auto me=Thing_new(FrequencyTrajectoriesEditor);
     my trajectoriesArea()=FrequencyTrajectoriesArea_create(true,nullptr,me.get());
+    if(smart){my backgroundSmartCopy=Data_copy(smart);my trajectoriesArea()->backgroundSmart=my backgroundSmartCopy.get();}
     if(sound)my soundArea()=SoundArea_create(false,sound,me.get());
     FunctionEditor_init(me.get(),title,tracks);
     return me;
 }
+static void paintSmartBackground(FrequencyTrajectoriesArea me) {
+    SmartSpectrogram s=my backgroundSmart;
+    const double left=std::max(my startWindow(),s->xmin),right=std::min(my endWindow(),s->xmax);
+    const double fmin=s->firstFrequencyHz;
+    const double fmax=std::min(my ceiling,fmin+(s->numberOfBins-1)*s->frequencyStepHz);
+    if(right<=left||fmax<=fmin)return;
+    const integer columns=1000,rows=std::min(s->numberOfBins,600_integer);
+    auto image=raw_MAT(rows,columns);
+    double peak=-1e300;
+    for(integer col=1,frame=1;col<=columns;++col){
+        const double time=left+(col-0.5)*(right-left)/columns;
+        while(frame<s->numberOfFrames-1&&s->times[frame+1]<time)++frame;
+        const integer next=std::min(s->numberOfFrames,frame+1);
+        const double blend=next==frame?0.0:Melder_clipped(0.0,(time-s->times[frame])/(s->times[next]-s->times[frame]),1.0);
+        for(integer row=1;row<=rows;++row){
+            const double binPosition=1.0+(row-1.0)*(fmax-fmin)/(s->frequencyStepHz*(rows-1.0));
+            const integer bin1=Melder_clipped(1_integer,(integer)std::floor(binPosition),s->numberOfBins);
+            const integer bin2=std::min(s->numberOfBins,bin1+1);
+            const double frequencyBlend=binPosition-bin1;
+            const double low=s->valuesDb[bin1][frame]*(1-blend)+s->valuesDb[bin1][next]*blend;
+            const double high=s->valuesDb[bin2][frame]*(1-blend)+s->valuesDb[bin2][next]*blend;
+            const double value=low*(1-frequencyBlend)+high*frequencyBlend;
+            image[row][col]=value;
+            peak=std::max(peak,value);
+        }
+    }
+    Graphics_image(my graphics(),image.all(),left,right,fmin,fmax,peak-my dynamicRange,peak);
+}
 void structFrequencyTrajectoriesArea::v_drawInside() {
-    if(backgroundSound&&(cachedStart!=startWindow()||cachedEnd!=endWindow())) {
+    if(!backgroundSmart&&backgroundSound&&(cachedStart!=startWindow()||cachedEnd!=endWindow())) {
         cachedStart=startWindow();cachedEnd=endWindow();spectrogram.reset();
         try {
             // Like SoundAnalysisArea: progress callbacks must not re-enter painting.
@@ -43,7 +77,8 @@ void structFrequencyTrajectoriesArea::v_drawInside() {
     }
     FunctionArea_setViewport(this);
     Graphics_setWindow(graphics(),startWindow(),endWindow(),ymin,ymax);
-    if(spectrogram)Spectrogram_paintInside(spectrogram.get(),graphics(),startWindow(),endWindow(),0,ceiling,0,true,dynamicRange,6.0,0,kSpectrogram_colourMap::GREY,false);
+    if(backgroundSmart)paintSmartBackground(this);
+    else if(spectrogram)Spectrogram_paintInside(spectrogram.get(),graphics(),startWindow(),endWindow(),0,ceiling,0,true,dynamicRange,6.0,0,kSpectrogram_colourMap::GREY,false);
     // Non-selected tracks use distinct colours; the active tier uses Praat's editable-point styling.
     const MelderColour colours[]={Melder_BLUE,Melder_GREEN,Melder_MAGENTA,Melder_CYAN};
     for(integer i=1;i<=trajectories->tracks.size;++i)if(i!=selectedTrack){
@@ -54,7 +89,7 @@ void structFrequencyTrajectoriesArea::v_drawInside() {
             if(p<last){auto b=tier->points.at[p+1];Graphics_line(graphics(),a->number,a->value,b->number,b->value);}}
     }
     FrequencyTrajectoriesArea_Parent::v_drawInside();
-    if(backgroundSound&&!spectrogram){Graphics_setColour(graphics(),Melder_RED);Graphics_setTextAlignment(graphics(),Graphics_LEFT,Graphics_TOP);Graphics_text(graphics(),startWindow(),ceiling,U"Spectrogram unavailable at this window length / interval");}
+    if(backgroundSound&&!backgroundSmart&&!spectrogram){Graphics_setColour(graphics(),Melder_RED);Graphics_setTextAlignment(graphics(),Graphics_LEFT,Graphics_TOP);Graphics_text(graphics(),startWindow(),ceiling,U"Spectrogram unavailable at this window length / interval");}
 }
 bool structFrequencyTrajectoriesArea::v_mouse(GuiDrawingArea_MouseEvent event,double x,double y) {
     if(event->isClick()){

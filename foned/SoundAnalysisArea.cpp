@@ -144,8 +144,10 @@ static void tryToComputeSpectrogram (SoundAnalysisArea me) {
 	try {
 		my d_spectrogramList = SpectrogramList_create ();   // also throws away the old one
 		autoSound sound = extractSoundOrNull (me, my startWindow() - margin, my endWindow() + margin);
-		if (! sound)
+		if (! sound) {
+			my d_spectrogramList. reset();
 			return;
+		}
 		if (sound -> ny == 3 && my instancePref_spectrogram_threeChannelsIsRGB()) {
 			for (integer ichan = 1; ichan <= 3; ichan ++) {
 				autoSound channel = Sound_extractChannel (sound.get(), ichan);
@@ -395,8 +397,8 @@ bool structSoundAnalysisArea :: v_mouse (GuiDrawingArea_MouseEvent event, double
 	}
 	#endif
 	if (x_world > our startWindow() && x_world < our endWindow())
-		our d_spectrogram_cursor = localY_fraction * our instancePref_spectrogram_viewTo()
-				+ (1.0 - localY_fraction) * our instancePref_spectrogram_viewFrom();
+		our d_spectrogram_cursor = localY_fraction * our v_spectrogramViewTo()
+				+ (1.0 - localY_fraction) * our v_spectrogramViewFrom();
 	return FunctionEditor_defaultMouseInWideDataView (our functionEditor(), event, x_world);
 }
 
@@ -667,7 +669,8 @@ static void menu_cb_showAnalyses (SoundAnalysisArea me, EDITOR_ARGS) {
 		my setInstancePref_intensity_show   (showIntensity);
 		my setInstancePref_formant_show     (showFormants);
 		my setInstancePref_pulses_show      (showPulses);
-		GuiMenuItem_check (my spectrogramToggle, showSpectrogram);
+		if (my spectrogramToggle)
+			GuiMenuItem_check (my spectrogramToggle, showSpectrogram);
 		GuiMenuItem_check (my pitchToggle,       showPitch);
 		GuiMenuItem_check (my intensityToggle,   showIntensity);
 		GuiMenuItem_check (my formantToggle,     showFormants);
@@ -2409,7 +2412,7 @@ void structSoundAnalysisArea :: v_createMenus () {
 		FunctionAreaMenu_addCommand (menu, U"Log script 4 (...)", GuiMenu_F12 | GuiMenu_COMMAND, menu_cb_logScript4, this);
 	}
 
-	if (our v_hasSpectrogram ()) {
+	if (our v_hasSpectrogram () && our v_hasNativeSpectrogramMenus ()) {
 		EditorMenu menu = Editor_addMenu (our functionEditor(), U"Spectrogram", 0);
 		our spectrogramToggle = FunctionAreaMenu_addCommand (menu, U"Show spectrogram",
 			GuiMenu_CHECKBUTTON | (instancePref_spectrogram_show() ? GuiMenu_TOGGLE_ON : 0),
@@ -2619,8 +2622,11 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 		Graphics_setFontSize (my graphics(), 12);
 		return;
 	}
+	bool spectrogramUnavailable = false;
+	if (! my v_draw_analysis_spectrogram()) {
 	if (my instancePref_spectrogram_show())
 		tryToHaveSpectrogram (me);
+	spectrogramUnavailable = my instancePref_spectrogram_show() && ! my d_spectrogramList;
 	if (my instancePref_spectrogram_show() && my d_spectrogramList) {
 		SpectrogramList_paintInside (my d_spectrogramList.get(), my graphics(), my startWindow(), my endWindow(),
 			my instancePref_spectrogram_viewFrom(), my instancePref_spectrogram_viewTo(),
@@ -2664,6 +2670,7 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 			}
 			Graphics_setFont (my graphics(), kGraphics_font::HELVETICA);
 		}
+	}
 	}
 	if (my instancePref_pitch_show())
 		tryToHavePitch (me);
@@ -2821,22 +2828,22 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 		}
 	}
 	if (my instancePref_spectrogram_show() || my instancePref_formant_show()) {
-		const bool frequencyCursorVisible = ( my d_spectrogram_cursor > my instancePref_spectrogram_viewFrom() && my d_spectrogram_cursor < my instancePref_spectrogram_viewTo() );
-		Graphics_setWindow (my graphics(), my startWindow(), my endWindow(), my instancePref_spectrogram_viewFrom(), my instancePref_spectrogram_viewTo());
+		const bool frequencyCursorVisible = ( my d_spectrogram_cursor > my v_spectrogramViewFrom() && my d_spectrogram_cursor < my v_spectrogramViewTo() );
+		Graphics_setWindow (my graphics(), my startWindow(), my endWindow(), my v_spectrogramViewFrom(), my v_spectrogramViewTo());
 		/*
 			Range marks.
 		*/
 		Graphics_setLineType (my graphics(), Graphics_DRAWN);
 		Graphics_setColour (my graphics(), DataGuiColour_NONEDITABLE);
-		if (! frequencyCursorVisible || Graphics_dyWCtoMM (my graphics(), my d_spectrogram_cursor - my instancePref_spectrogram_viewFrom()) > 5.0) {
+		if (! frequencyCursorVisible || Graphics_dyWCtoMM (my graphics(), my d_spectrogram_cursor - my v_spectrogramViewFrom()) > 5.0) {
 			Graphics_setTextAlignment (my graphics(), Graphics_RIGHT, Graphics_HALF);
-			Graphics_text (my graphics(), my startWindow(), my instancePref_spectrogram_viewFrom() - Graphics_dyMMtoWC (my graphics(), 0.5),
-					Melder_graphicalHalf (my instancePref_spectrogram_viewFrom()), U" Hz");
+			Graphics_text (my graphics(), my startWindow(), my v_spectrogramViewFrom() - Graphics_dyMMtoWC (my graphics(), 0.5),
+					Melder_graphicalHalf (my v_spectrogramViewFrom()), U" Hz");
 		}
-		if (! frequencyCursorVisible || Graphics_dyWCtoMM (my graphics(), my instancePref_spectrogram_viewTo() - my d_spectrogram_cursor) > 5.0) {
+		if (! frequencyCursorVisible || Graphics_dyWCtoMM (my graphics(), my v_spectrogramViewTo() - my d_spectrogram_cursor) > 5.0) {
 			Graphics_setTextAlignment (my graphics(), Graphics_RIGHT, Graphics_HALF);
-			Graphics_text (my graphics(), my startWindow(), my instancePref_spectrogram_viewTo(),
-					Melder_graphicalHalf (my instancePref_spectrogram_viewTo()), U" Hz");
+			Graphics_text (my graphics(), my startWindow(), my v_spectrogramViewTo(),
+					Melder_graphicalHalf (my v_spectrogramViewTo()), U" Hz");
 		}
 		/*
 			Cursor lines.
@@ -2856,6 +2863,28 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 			Graphics_line (our graphics, our endSelection, our p_spectrogram_viewFrom, our endSelection, our p_spectrogram_viewTo);*/
 		Graphics_setLineType (my graphics(), Graphics_DRAWN);
 	}
+	if (spectrogramUnavailable) {
+		const double windowLength = my instancePref_spectrogram_windowLength();
+		const double physicalWindow = windowLength *
+			(my instancePref_spectrogram_windowShape() == kSound_to_Spectrogram_windowShape::GAUSSIAN ? 2.0 : 1.0);
+		const SampledXY source = my soundOrLongSound();
+		const bool windowTooLong = source && physicalWindow > source -> nx * source -> dx;
+		const double savedFontSize = Graphics_inqFontSize (my graphics());
+		Graphics_setWindow (my graphics(), 0.0, 1.0, 0.0, 1.0);
+		Graphics_setFontSize (my graphics(), 10.0);
+		Graphics_setColour (my graphics(), Melder_BLACK);
+		Graphics_setTextAlignment (my graphics(), Graphics_CENTRE, Graphics_TOP);
+		if (windowTooLong) {
+			Graphics_text (my graphics(), 0.5, 0.98,
+				U"Spectrogram unavailable: window length ", Melder_half (windowLength), U" s is too long for this sound.");
+			Graphics_text (my graphics(), 0.5, 0.90,
+				U"Reduce Window length in Spectrogram > Spectrogram settings.");
+		} else {
+			Graphics_text (my graphics(), 0.5, 0.98,
+				U"Spectrogram unavailable. Check Spectrogram > Spectrogram settings.");
+		}
+		Graphics_setFontSize (my graphics(), savedFontSize);
+	}
 }
 void structSoundAnalysisArea :: v_draw_analysis () {
 	SoundAnalysisArea_v_draw_analysis (this);
@@ -2867,7 +2896,7 @@ void structSoundAnalysisArea :: v_draw_analysis_formants () {
 	if (our instancePref_formant_show() && our d_formant) {
 		Graphics_setSpeckleSize (our graphics(), our instancePref_formant_dotSize());
 		Formant_drawSpeckles_inside (our d_formant.get(), our graphics(), our startWindow(), our endWindow(),
-			our instancePref_spectrogram_viewFrom(), our instancePref_spectrogram_viewTo(), our instancePref_formant_dynamicRange(),
+			our v_spectrogramViewFrom(), our v_spectrogramViewTo(), our instancePref_formant_dynamicRange(),
 			Melder_RED, Melder_PINK, true
 		);
 		Graphics_setColour (our graphics(), Melder_BLACK);

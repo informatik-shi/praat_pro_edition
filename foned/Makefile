@@ -3,7 +3,7 @@
 
 CPPFLAGS += -I ../kar -I ../melder -I ../sys -I ../dwsys -I ../stat -I ../dwtools -I ../LPC -I ../fon -I ../external/portaudio -I ../external/flac -I ../external/mp3 -I ../external/espeak
 
-OBJECTS = FrequencyTrajectoriesEditor.o SmartSpectrogramEditor.o SoundRecorder.o \
+OBJECTS = FrequencyTrajectoriesEditor.o SmartSpectrogramEditor.o ProSoundEditor.o SoundRecorder.o \
    FunctionArea.o SoundArea.o SoundAnalysisArea.o TextGridArea.o \
    SpectrumArea.o PointArea.o PitchArea.o SpectrogramArea.o \
    RealTierArea.o PitchTierArea.o IntensityTierArea.o DurationTierArea.o AmplitudeTierArea.o \
@@ -19,7 +19,7 @@ OBJECTS = FrequencyTrajectoriesEditor.o SmartSpectrogramEditor.o SoundRecorder.o
 
 all: libfoned.a
 
-SoundEditor.o SpectrogramEditor.o: ../sys/luaplot/PlotHost.h ../sys/luaplot/PlotModel.h
+SoundEditor.o ProSoundEditor.o SpectrogramEditor.o: ../sys/luaplot/PlotHost.h ../sys/luaplot/PlotModel.h
 
 clean:
 	$(RM) $(OBJECTS)

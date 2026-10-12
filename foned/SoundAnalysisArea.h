@@ -48,6 +48,7 @@ Thing_define (SoundAnalysisArea, FunctionArea) {
 			pitchFilteredCrossCorrelationToggle;
 
 	virtual bool v_hasSpectrogram () { return true; }
+	virtual bool v_hasNativeSpectrogramMenus () { return true; }
 	virtual bool v_hasPitch       () { return true; }
 	virtual bool v_hasIntensity   () { return true; }
 	virtual bool v_hasFormants    () { return true; }
@@ -83,6 +84,9 @@ public:
 	bool v_mouse (GuiDrawingArea_MouseEvent event, double x_world, double localY_fraction)
 		override;
 	virtual void v_draw_analysis ();
+	virtual bool v_draw_analysis_spectrogram () { return false; }
+	virtual double v_spectrogramViewFrom () const { return our instancePref_spectrogram_viewFrom(); }
+	virtual double v_spectrogramViewTo () const { return our instancePref_spectrogram_viewTo(); }
 	virtual void v_draw_analysis_pulses ();
 	virtual void v_draw_analysis_formants ();
 	void v_createMenus ()

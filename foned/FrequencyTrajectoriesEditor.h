@@ -6,9 +6,11 @@
 #include "RealTierArea.h"
 #include "SoundArea.h"
 #include "Spectrogram.h"
+#include "SmartSpectrogram.h"
 Thing_define(FrequencyTrajectoriesArea, RealTierArea) {
     FrequencyTrajectories trajectories=nullptr;
     Sound backgroundSound=nullptr;
+    SmartSpectrogram backgroundSmart=nullptr;
     integer selectedTrack=1;
     double ceiling=5500.0, windowLength=0.005, dynamicRange=50.0;
     double cachedStart=undefined,cachedEnd=undefined;
@@ -25,6 +27,7 @@ DEFINE_FunctionArea_create(FrequencyTrajectoriesArea, RealTier)
 Thing_define(FrequencyTrajectoriesEditor, FunctionEditor) {
     DEFINE_FunctionArea(1, FrequencyTrajectoriesArea, trajectoriesArea)
     DEFINE_FunctionArea(2, SoundArea, soundArea)
+    autoSmartSpectrogram backgroundSmartCopy;
     void v1_dataChanged(Editor sender) override;
     void v_distributeAreas() override {
         trajectoriesArea()->setGlobalYRange_fraction(0.0,soundArea()?0.72:1.0);
@@ -35,5 +38,5 @@ Thing_define(FrequencyTrajectoriesEditor, FunctionEditor) {
     }
     void v_drawLegends() override;
 };
-autoFrequencyTrajectoriesEditor FrequencyTrajectoriesEditor_create(conststring32 title,FrequencyTrajectories tracks,Sound optionalSound);
+autoFrequencyTrajectoriesEditor FrequencyTrajectoriesEditor_create(conststring32 title,FrequencyTrajectories tracks,Sound optionalSound,SmartSpectrogram optionalSmart=nullptr);
 #endif
