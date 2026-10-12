@@ -2,6 +2,11 @@
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 root="$PWD"
+scratch="$root/.local-build/x86-compiler-tmp"
+mkdir -p .local-build/x86-compiler-tmp
+export TMPDIR="$scratch"
+export TMP="$(cygpath -w "$scratch")"
+export TEMP="$TMP"
 if [[ -n "${PRAAT_GIT:-}" ]]; then
     export PATH="$(dirname "$(cygpath -u "$PRAAT_GIT")"):$PATH"
 fi
