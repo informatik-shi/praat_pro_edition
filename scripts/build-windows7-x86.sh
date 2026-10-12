@@ -41,7 +41,7 @@ objdump -f Praat-win7-x86.exe | grep 'file format pei-i386'
 if grep -Ei 'DLL Name:.*(api-ms-|ucrtbase|libgcc|libstdc|libwinpthread|msys-)' .local-build/pe-imports.txt; then
     echo 'Unexpected runtime DLL dependency.' >&2; exit 1
 fi
-release="$root/dist/windows7-x86"
+release="../../dist/windows7-x86"
 mkdir -p "$release/examples" "$release/tutorials/lua-plots" "$release/verification"
 cp Praat-win7-x86.exe "$release/praat-win7-x86.exe"
 cp BUILD_WINDOWS7_X86.md README.md CHANGES_CUSTOM.md "$release/"
@@ -62,5 +62,5 @@ cp tests/lua-debugger/demo.lua "$release/examples/lua-debugger-demo.lua"
 cp .local-build/toolchain.txt .local-build/pe-imports.txt .local-build/*tests.log "$release/verification/"
 echo "$revision" > "$release/SOURCE-COMMIT.txt"
 (cd "$release"; sha256sum praat-win7-x86.exe > SHA256SUMS.txt)
-git -C "$root" archive --format=zip --output="$root/dist/praat-win7-x86-source.zip" "$revision"
-echo "Built and batch-tested: $release/praat-win7-x86.exe"
+git -C "$root" archive --format=zip --output=dist/praat-win7-x86-source.zip "$revision"
+echo "Built and batch-tested: $root/dist/windows7-x86/praat-win7-x86.exe"
