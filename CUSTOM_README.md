@@ -19,6 +19,9 @@
 
 ## Документация
 
+- Учебник Lua для этой сборки: [русская версия](docs/tutorials/lua-praat/lua-praat-ru.html)
+  и [English edition](docs/tutorials/lua-praat/lua-praat-en.html), автономные HTML.
+
 - [Траектории частот и формант на спектрограмме](docs/frequency-trajectories.md).
 
 - [Журнал шагов](project-docs/JOURNAL.md).

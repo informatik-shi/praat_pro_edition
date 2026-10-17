@@ -1,0 +1,147 @@
+[
+  {
+    "slug": "01-start",
+    "filename": "01-start.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "02-lua",
+    "filename": "02-lua.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "03-objects",
+    "filename": "03-objects.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "04-bridge",
+    "filename": "04-bridge.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "05-sampling",
+    "filename": "05-sampling.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "06-files",
+    "filename": "06-files.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "07-functions",
+    "filename": "07-functions.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "08-pitch",
+    "filename": "08-pitch.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "09-intensity",
+    "filename": "09-intensity.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "10-spectrum",
+    "filename": "10-spectrum.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "11-spectrogram",
+    "filename": "11-spectrogram.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "12-filters",
+    "filename": "12-filters.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "13-textgrid",
+    "filename": "13-textgrid.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "14-intervals",
+    "filename": "14-intervals.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "15-synthesis",
+    "filename": "15-synthesis.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "16-formants",
+    "filename": "16-formants.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "17-lpc",
+    "filename": "17-lpc.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "18-pulses",
+    "filename": "18-pulses.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "19-manipulation",
+    "filename": "19-manipulation.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "20-dtw",
+    "filename": "20-dtw.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "21-tables",
+    "filename": "21-tables.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "22-errors",
+    "filename": "22-errors.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "23-batch",
+    "filename": "23-batch.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "24-plots",
+    "filename": "24-plots.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "25-heatmap",
+    "filename": "25-heatmap.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "26-overlay",
+    "filename": "26-overlay.lua",
+    "mode": "gui"
+  },
+  {
+    "slug": "27-debugger",
+    "filename": "27-debugger.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "28-simulation",
+    "filename": "28-simulation.lua",
+    "mode": "batch"
+  },
+  {
+    "slug": "29-project",
+    "filename": "29-project.lua",
+    "mode": "batch"
+  }
+]

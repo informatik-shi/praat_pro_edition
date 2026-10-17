@@ -3,6 +3,11 @@
 В сборку включён Lua 5.5.1. Устанавливать Lua или добавлять DLL не нужно.
 Исходный Praat Script Editor и его отладчик остаются отдельными инструментами.
 
+Пошаговый учебник с 29 уроками, заданиями, ответами и примерами для этой сборки:
+[русская HTML-версия](tutorials/lua-praat/lua-praat-ru.html) и
+[English HTML edition](tutorials/lua-praat/lua-praat-en.html).
+Оба документа автономны; код можно копировать и скачивать прямо из учебника.
+
 ## Редактор
 
 В окне Objects откройте **Praat → New Lua script** или **Open Lua script...**.
