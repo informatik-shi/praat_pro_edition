@@ -751,7 +751,7 @@ main{max-width:1110px;margin-left:290px;padding:65px 64px 90px}.eyebrow{font-siz
 @media(min-width:1600px){main{margin-left:max(290px,calc((100vw - 1000px)/2));max-width:1060px}.rail{width:310px}}
 @media(max-width:980px){.rail{width:235px;padding:22px 16px}main{margin-left:235px;padding:40px 30px}h2{font-size:30px}}
 @media(max-width:700px){.rail{position:static;width:auto;border-right:0;border-bottom:1px solid var(--line);padding:20px}.rail h2{margin:8px 0}.rail nav{max-height:220px;overflow:auto}.rail .minor{display:none}main{margin:0;padding:34px 20px 60px}h1{font-size:42px;letter-spacing:-1px}h2{font-size:30px}.lead{font-size:18px}.book-section{margin-top:42px;padding-top:30px}pre{padding:18px 16px;font-size:12px}.route{padding:20px}body{font-size:16px}}
-@media print{body{background:white;font:10.5pt/1.5 Georgia,serif;color:#000}.rail,.listing-head button,.status{display:none}main{margin:0;max-width:none;padding:0}h1{font-size:32pt}h2{font-size:22pt;break-after:avoid}h3{break-after:avoid}.book-section{break-before:page;margin-top:0;border:0;padding-top:0}.route{color:#000;background:#eef2ee}.route a{color:#000}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f4f2;color:#000;font:8.5pt/1.45 Consolas,monospace;padding:12px}.listing{overflow:visible;border:1px solid #aaa;break-inside:auto}.listing-head{background:#e7e7e7;color:#000}.table-wrap{overflow:visible}tr,aside,details{break-inside:avoid}details>p{display:block!important}details:not([open])>*:not(summary){display:block}a{color:#000}a[href^="https"]::after{content:" (" attr(href) ")";font-size:8pt;overflow-wrap:anywhere}@page{margin:18mm}}
+@media print{body{background:white;font:10.5pt/1.5 Georgia,serif;color:#000}.rail,.listing-head button,.status{display:none}main{margin:0;max-width:none;padding:0}h1{font-size:32pt}h2{font-size:22pt;break-after:avoid}h3{break-after:avoid}.book-section{break-before:page;margin-top:0;border:0;padding-top:0}.route{color:#000;background:#eef2ee}.route a,.route h3{color:#000}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f4f2;color:#000;font:8.5pt/1.45 Consolas,monospace;padding:12px}.listing{overflow:visible;border:1px solid #aaa;break-inside:auto}.listing-head{background:#e7e7e7;color:#000}.table-wrap{overflow:visible}tr,aside,details{break-inside:avoid}details>p{display:block!important}details:not([open])>*:not(summary){display:block}a{color:#000}a[href^="https"]::after{content:" (" attr(href) ")";font-size:8pt;overflow-wrap:anywhere}@page{margin:18mm}}
 '''
 
 def appendix(lang):
@@ -808,10 +808,14 @@ document.getElementById('search').addEventListener('input',event=>{
  document.querySelectorAll('nav a').forEach(link=>{const section=document.getElementById(link.hash.slice(1));const match=!query||(section?section.textContent:link.textContent).toLocaleLowerCase().includes(query);link.hidden=!match;if(match)count++;});
  status.textContent=query?(ru?'Найдено разделов: ':'Matching sections: ')+count:'';
 });
-document.getElementById('print').addEventListener('click',()=>{
- const closed=[...document.querySelectorAll('details:not([open])')];closed.forEach(d=>d.open=true);
- window.print();closed.forEach(d=>d.open=false);
+let printClosed=[];
+window.addEventListener('beforeprint',()=>{
+ printClosed=[...document.querySelectorAll('details:not([open])')];printClosed.forEach(d=>d.open=true);
 });
+window.addEventListener('afterprint',()=>{
+ printClosed.forEach(d=>d.open=false);printClosed=[];
+});
+document.getElementById('print').addEventListener('click',()=>window.print());
 '''
 
 def illustration(slug, lang):
