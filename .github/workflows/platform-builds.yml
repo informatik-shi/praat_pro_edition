@@ -4,12 +4,19 @@ on:
   push:
     branches: ["build/macos-linux"]
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build
+        type: choice
+        default: all
+        options: [all, linux, macos]
 
 permissions:
   contents: read
 
 jobs:
   linux:
+    if: github.event_name == 'push' || inputs.platform != 'macos'
     runs-on: ubuntu-22.04
     timeout-minutes: 60
     steps:
@@ -20,6 +27,8 @@ jobs:
           sudo apt-get install -y build-essential pkg-config libgtk-3-dev libasound2-dev libpulse-dev libjack-jackd2-dev xvfb xauth
       - name: Build and verify Linux x86-64
         run: bash scripts/build-linux.sh
+      - name: GTK editor smoke test
+        run: bash scripts/platforms/test-linux-gui.sh "$PWD" "$PWD/.local-build/gui"
       - uses: actions/upload-artifact@v6
         with:
           name: praat-pro-linux-x86_64
@@ -32,7 +41,8 @@ jobs:
           path: .local-build/*.log
           include-hidden-files: true
   macos:
-    runs-on: macos-15
+    if: github.event_name == 'push' || inputs.platform != 'linux'
+    runs-on: macos-15-intel
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6

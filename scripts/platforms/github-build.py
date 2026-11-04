@@ -18,6 +18,7 @@ parser.add_argument("action", choices=("access", "dispatch", "status", "logs", "
 parser.add_argument("--repo", default="informatik-shi/praat_pro_edition")
 parser.add_argument("--ref", default="build/macos-linux")
 parser.add_argument("--run", type=int)
+parser.add_argument("--platform", choices=("all", "linux", "macos"), default="all")
 args = parser.parse_args()
 if not re.fullmatch(r"[\w.-]+/[\w.-]+", args.repo):
     raise SystemExit("Invalid repository name")
@@ -58,7 +59,7 @@ if args.action == "access":
     repo = request(base)
     print(json.dumps({"repository": repo["full_name"], "permissions": repo.get("permissions", {})}))
 elif args.action == "dispatch":
-    request(base + "/actions/workflows/platform-builds.yml/dispatches", {"ref": args.ref})
+    request(base + "/actions/workflows/platform-builds.yml/dispatches", {"ref": args.ref, "inputs": {"platform": args.platform}})
     print(f"Platform build requested for {args.repo} at {args.ref}")
 elif args.action == "status":
     if args.run:
