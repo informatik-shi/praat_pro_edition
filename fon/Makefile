@@ -3,7 +3,7 @@
 
 CPPFLAGS += -I ../kar -I ../melder -I ../sys -I ../dwsys -I ../stat -I ../dwtools -I ../LPC -I ../foned -I ../fon -I ../external/portaudio -I ../external/flac -I ../external/mp3 -I ../external/espeak -I ../external/whispercpp
 
-OBJECTS = seg/SegReader.o FrequencyTrajectories.o praat_FrequencyTrajectories.o SmartSpectrogram.o praat_SmartSpectrogram.o Transition.o Distributions_and_Transition.o \
+OBJECTS = samples/SpectrogramS.o praat_SpectrogramS.o seg/SegReader.o FrequencyTrajectories.o praat_FrequencyTrajectories.o SmartSpectrogram.o praat_SmartSpectrogram.o Transition.o Distributions_and_Transition.o \
    Function.o Sampled.o SampledXY.o Matrix.o Vector.o Polygon.o PointProcess.o \
    Matrix_and_PointProcess.o Matrix_and_Polygon.o AnyTier.o RealTier.o \
    Sound.o LongSound.o SoundSet.o Sound_files.o Sound_audio.o PointProcess_and_Sound.o Sound_PointProcess.o ParamCurve.o \
@@ -57,3 +57,7 @@ libfon.a: $(OBJECTS)
 	$(RANLIB) libfon.a
 
 $(OBJECTS): *.h ../external/portaudio/*.h ../kar/*.h ../melder/*.h ../sys/*.h ../dwsys/*.h ../stat/*.h ../dwtools/*.h ../LPC/*.h ../foned/*.h ../external/flac/*.h ../external/mp3/mp3.h
+
+SmartSpectrogram.o praat_SmartSpectrogram.o: smart/FrameAccess.h
+
+samples/SpectrogramS.o praat_SpectrogramS.o praat_uvafon_init.o: samples/SpectrogramS.h samples/SpectrogramS_def.h

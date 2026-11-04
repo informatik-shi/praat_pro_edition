@@ -12,7 +12,7 @@ Thing_define (SmartSpectrogramArea, SoundAnalysisArea) {
     bool v_hasNativeSpectrogramMenus () override { return false; }
     double displayedMaximumFrequencyHz () const;
     double dynamicRangeDb = 60.0;
-    bool interpolateFrames = true;
+    bool interpolateFrames = false;
     integer selectedFrame = 1, selectedBin = 1;
     void v_draw_analysis () override;
     bool v_draw_analysis_spectrogram () override;

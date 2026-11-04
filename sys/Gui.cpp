@@ -1,3 +1,4 @@
+#include "Theme.h"
 /* Gui.cpp
  *
  * Copyright (C) 1992-2008,2010-2017,2019-2021,2024-2026 Paul Boersma
@@ -143,7 +144,7 @@ void Gui_getWindowPositioningBounds (double *x, double *y, double *width, double
 	HBRUSH theWinGuiBackgroundBrush () {
 		static HBRUSH brush;
 		if (! brush)
-			brush = CreateSolidBrush (RGB (224, 224, 224));
+			brush = CreateSolidBrush (Theme_nativeColour ("window.background", RGB (224, 224, 224)));
 		return brush;
 	}
 #endif

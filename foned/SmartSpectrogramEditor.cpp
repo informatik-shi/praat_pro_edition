@@ -1,5 +1,8 @@
+#include "theme/Paint.h"
 // Praat Pro Edition. GPL-3.0-or-later.
 #include "SmartSpectrogramEditor.h"
+#include "smart/PowerDisplay.h"
+#include "../fon/smart/FrameAccess.h"
 #include "EditorM.h"
 #include <algorithm>
 #include <cmath>
@@ -98,38 +101,57 @@ bool structSmartSpectrogramArea::v_draw_analysis_spectrogram () {
     const double left = startWindow(), right = endWindow();
     FunctionArea_setViewport (this);
     Graphics_setWindow (graphics(), left, right, fmin, fmax);
-    const integer columns = 1000;
-    const integer rows = std::min (s->numberOfBins, 600_integer);
+    const double resolution = Graphics_getResolution (graphics());
+    const double width = std::abs (Graphics_dxWCtoMM (graphics(), right-left)) * resolution / 25.4;
+    const double height = std::abs (Graphics_dyWCtoMM (graphics(), fmax-fmin)) * resolution / 25.4;
+    const integer columns = std::min (1000_integer, std::max (2_integer, (integer) (width / 1.5)));
+    const integer rows = std::min (s->numberOfBins, std::min (600_integer,
+        std::max (2_integer, (integer) (height))));
     auto image = raw_MAT (rows, columns);
+    std::vector<bool> validColumns((size_t)columns,false);
     double peak = -1e300;
     for (integer col = 1, frame = 1; col <= columns; ++ col) {
         const double time = left + (col - 0.5) * (right - left) / columns;
         while (frame < s->numberOfFrames - 1 && s->times [frame + 1] < time) ++ frame;
         const integer next = std::min (s->numberOfFrames, frame + 1);
-        const double blend = ! interpolateFrames || next == frame ? 0.0 :
+        const double timeFraction = next == frame ? 0.0 :
             Melder_clipped (0.0, (time - s->times [frame]) / (s->times [next] - s->times [frame]), 1.0);
-        const integer nearest = blend < 0.5 ? frame : next;
+        const integer nearest = SmartSpectrogram_frameAt(s,time);
+        if(!nearest)continue;
+        const bool smooth = interpolateFrames && (!s->numberOfFrameIntervals ||
+            (frame<s->numberOfFrames && s->frameStarts[frame+1]<=s->frameEnds[frame]+1e-12));
+        validColumns[(size_t)col-1]=true;
         for (integer row = 1; row <= rows; ++ row) {
-            const double binPosition = 1.0 + (row - 1.0) * (fmax - fmin) / (s->frequencyStepHz * (rows - 1.0));
-            const integer bin1 = Melder_clipped (1_integer, (integer) std::floor (binPosition), s->numberOfBins);
-            const integer bin2 = std::min (s->numberOfBins, bin1 + 1);
-            const double fy = binPosition - bin1;
-            double value;
-            if (interpolateFrames) {
-                const double low = s->valuesDb [bin1] [frame] * (1 - blend) + s->valuesDb [bin1] [next] * blend;
-                const double high = s->valuesDb [bin2] [frame] * (1 - blend) + s->valuesDb [bin2] [next] * blend;
-                value = low * (1 - fy) + high * fy;
-            } else {
-                value = s->valuesDb [bin1] [nearest] * (1 - fy) + s->valuesDb [bin2] [nearest] * fy;
-            }
+            const double low = fmin + (row-1.0)*(fmax-fmin)/rows;
+            const double high = fmin + row*(fmax-fmin)/rows;
+            const double value = SmartPowerDisplay::bandPeak (
+                s->firstFrequencyHz, s->frequencyStepHz, s->numberOfBins, low, high,
+                [&](integer bin) { return smooth ? SmartPowerDisplay::blend (
+                    s->valuesDb [bin] [frame], s->valuesDb [bin] [next], timeFraction)
+                    : s->valuesDb [bin] [nearest]; });
             image [row] [col] = value;
             peak = std::max (peak, value);
         }
     }
-    Graphics_image (graphics(), image.all(), left, right, fmin, fmax, peak - dynamicRangeDb, peak);
+    if(peak==-1e300)return true;
+    // Keep Windows on the rectangle path, including when a bitmap cannot be drawn.
+    for (integer row=1; row<=rows; row+=40) {
+        const integer lastRow=std::min(rows,row+39);
+        for (integer col=1; col<=columns;) {
+            if(!validColumns[(size_t)col-1]){++col;continue;}
+            integer lastCol=col;
+            while(lastCol<columns&&lastCol<col+59&&validColumns[(size_t)lastCol])++lastCol;
+            auto tile=part_MAT(image.get(),row,lastRow,col,lastCol);
+            Graphics_cellArray(graphics(),tile.all(),
+                left+(col-1.0)*(right-left)/columns, left+lastCol*(right-left)/columns,
+                fmin+(row-1.0)*(fmax-fmin)/rows, fmin+lastRow*(fmax-fmin)/rows,
+                peak-dynamicRangeDb,peak);
+            col=lastCol+1;
+        }
+    }
 
     if (s->pitch) {
-        Graphics_setColour (graphics(), Melder_CYAN);
+        ThemePaint_set(graphics(), "analysis.pitch_secondary", Melder_CYAN);
         Graphics_setLineWidth (graphics(), 2.0);
         double oldTime = undefined, oldHz = undefined;
         for (integer i = 1; i <= s->pitch->nx; ++ i) {
@@ -146,7 +168,7 @@ bool structSmartSpectrogramArea::v_draw_analysis_spectrogram () {
     if (s->trajectories) {
         const MelderColour colours[] = { Melder_RED, Melder_BLUE, Melder_GREEN, Melder_MAGENTA };
         for (integer track = 1; track <= s->trajectories->numberOfTracks; ++ track) {
-            Graphics_setColour (graphics(), colours [(track - 1) % 4]);
+            ThemePaint_set(graphics(), ("trajectory.f" + std::to_string(1 + (track - 1) % 10)).c_str(), colours [(track - 1) % 4]);
             Graphics_setLineWidth (graphics(), 2.0);
             auto tier = s->trajectories->tracks.at [track];
             for (integer i = 1; i <= tier->points.size; ++ i) {
@@ -230,6 +252,12 @@ static void menu_settings (SmartSpectrogramArea me, EDITOR_ARGS) {
         FunctionEditor_redraw (my functionEditor());
     EDITOR_END
 }
+static void menu_extractSmartSpectrum(SmartSpectrogramArea me,EDITOR_ARGS) {
+    CONVERT_DATA_TO_ONE
+        autoSpectrum result=SmartSpectrogram_to_Spectrum_nearest(my spectrum(),0.5*(my startSelection()+my endSelection()));
+    CONVERT_DATA_TO_ONE_END(Melder_cat(U"smart_period_",Melder_double(my spectrum()->times[
+        SmartSpectrogram_nearestFrame(my spectrum(),0.5*(my startSelection()+my endSelection()))])))
+}
 static void menu_setValue (SmartSpectrogramArea me, EDITOR_ARGS) {
     EDITOR_FORM (U"Set SmartSpectrogram value", nullptr)
         REAL (db, U"Value (dB)", U"-60")
@@ -284,6 +312,7 @@ void structSmartSpectrogramArea::v_createMenus () {
             GuiMenu_CHECKBUTTON | (instancePref_spectrogram_show() ? GuiMenu_TOGGLE_ON : 0),
             menu_showSpectrogram, this);
     FunctionAreaMenu_addCommand (menu, U"Display settings...", 0, menu_settings, this);
+    FunctionAreaMenu_addCommand(menu,U"Extract nearest period spectrum",0,menu_extractSmartSpectrum,this);
     FunctionAreaMenu_addCommand (menu, U"Get frequency at frequency cursor", 0, QUERY_EDITOR_FOR_REAL__smartFrequency, this);
     FunctionAreaMenu_addCommand (menu, U"Get value at cursor cross", 0, QUERY_DATA_FOR_REAL__smartValueAtCursor, this);
     FunctionAreaMenu_addCommand (menu, U"Move frequency cursor to...", 0, menu_moveFrequencyCursor, this);

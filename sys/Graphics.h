@@ -41,6 +41,7 @@ typedef struct {
 
 Thing_define (Graphics, Thing) {
 	/* Device constants. */
+	bool editorTheme;   // UI palette only; never enabled on picture/export graphics.
 	bool screen;
 		/* A boolean for whether we are a graphic screen (which may include a non-PostScript printer. */
 	bool postScript;

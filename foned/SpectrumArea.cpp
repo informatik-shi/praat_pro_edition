@@ -1,3 +1,4 @@
+#include "theme/Paint.h"
 /* SpectrumArea.cpp
  *
  * Copyright (C) 1992-2023 Paul Boersma
@@ -62,9 +63,10 @@ void structSpectrumArea :: v1_info () {
 #pragma mark - SpectrumArea drawing
 
 void structSpectrumArea :: v_drawInside () {
+	ThemePaint_set(our graphics(), "analysis.spectrum", Melder_BLACK);
 	Spectrum_drawInside (our spectrum(), our graphics(), our startWindow(), our endWindow(),
 			our minimum(), our maximum());
-	Graphics_setColour (our graphics(), Melder_BLUE);
+	ThemePaint_set(our graphics(), "analysis.pitch", Melder_BLUE);
 	FunctionArea_drawRightMark (this, our maximum(),
 			Melder_fixed (our maximum(), 1), U" dB", Graphics_HALF);
 	FunctionArea_drawRightMark (this, our minimum(),

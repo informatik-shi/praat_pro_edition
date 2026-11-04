@@ -17,6 +17,7 @@
  */
 
 #include "GraphicsP.h"
+#include "Theme.h"
 
 /* Normally on, because e.g. the intensity contour in the Sound window should not run through the play buttons: */
 #define FUNCTIONS_ARE_CLIPPED  1
@@ -617,6 +618,12 @@ void structGraphicsScreen :: v_button (double x1DC, double x2DC, double y1DC, do
 	#elif gdi
 		RECT rect;
 		rect. left = x1DC, rect. right = x2DC, rect. top = y2DC, rect. bottom = y1DC;
+        if (Theme_editorGraphics(this)) {
+            auto bg=CreateSolidBrush(Theme_nativeColour("window.control_background",RGB(192,192,166)));
+            auto border=CreateSolidBrush(Theme_nativeColour("window.border",RGB(128,128,128)));
+            FillRect(our d_gdiGraphicsContext,&rect,bg);FrameRect(our d_gdiGraphicsContext,&rect,border);
+            DeleteObject(bg);DeleteObject(border);return;
+        }
 		DrawEdge (our d_gdiGraphicsContext, & rect, EDGE_RAISED, BF_RECT);
 		SelectPen (our d_gdiGraphicsContext, GetStockPen (NULL_PEN));
 		static HBRUSH brush;

@@ -1,3 +1,5 @@
+#include "samples/SpectrogramS.h"
+#include "theme/Paint.h"
 /* SoundAnalysisArea.cpp
  *
  * Copyright (C) 1992-2026 Paul Boersma, 2026 yjzxkxdn (spectrogram colour schemes)
@@ -20,6 +22,7 @@
 #include "Sound_and_Spectrogram.h"
 #include "Photo.h"
 #include "Sound_and_Spectrum.h"
+#include "Spectrum_and_Spectrogram.h"
 #include "Sound_to_Pitch.h"
 #include "Sound_to_Intensity.h"
 #include "Sound_to_Formant.h"
@@ -137,9 +140,24 @@ static autoSound extractSoundOrNull (SoundAnalysisArea me, double tmin, double t
 	}
 	return sound;
 }
+static autoSpectrogram computeSpectrogram(SoundAnalysisArea me,Sound sound) {
+    if(my instancePref_spectrogram_useSamples()){
+        const auto source=my soundOrLongSound();
+        const integer offset=std::max(0_integer,Melder_iround((sound->x1-source->x1)/source->dx));
+        auto result=Sound_to_SpectrogramS(sound,my instancePref_spectrogram_windowSamples(),
+            my instancePref_spectrogram_hopSamples(),std::min(my instancePref_spectrogram_viewTo(),0.5/sound->dx),
+            my instancePref_spectrogram_fftSamples(),my instancePref_spectrogram_windowShape(),offset);
+        return result.static_cast_move<structSpectrogram>();
+    }
+    return Sound_to_Spectrogram_e(sound,my instancePref_spectrogram_windowLength(),my instancePref_spectrogram_viewTo(),
+        (my endWindow()-my startWindow())/my instancePref_spectrogram_timeSteps(),
+        my instancePref_spectrogram_viewTo()/my instancePref_spectrogram_frequencySteps(),
+        my instancePref_spectrogram_windowShape(),8.0,8.0);
+}
 static void tryToComputeSpectrogram (SoundAnalysisArea me) {
-	autoMelderProgressOff progress;
-	const double margin = ( my instancePref_spectrogram_windowShape() == kSound_to_Spectrogram_windowShape::GAUSSIAN ?
+    // A redraw must not pump nested GUI events through a progress dialog.
+    autoMelderProgressOff progress;
+	const double margin = my instancePref_spectrogram_useSamples() ? 0.5*my instancePref_spectrogram_windowSamples()*my soundOrLongSound()->dx : ( my instancePref_spectrogram_windowShape() == kSound_to_Spectrogram_windowShape::GAUSSIAN ?
 			my instancePref_spectrogram_windowLength() : 0.5 * my instancePref_spectrogram_windowLength() );
 	try {
 		my d_spectrogramList = SpectrogramList_create ();   // also throws away the old one
@@ -151,25 +169,13 @@ static void tryToComputeSpectrogram (SoundAnalysisArea me) {
 		if (sound -> ny == 3 && my instancePref_spectrogram_threeChannelsIsRGB()) {
 			for (integer ichan = 1; ichan <= 3; ichan ++) {
 				autoSound channel = Sound_extractChannel (sound.get(), ichan);
-				autoSpectrogram spectrogram = Sound_to_Spectrogram_e (channel.get(),
-					my instancePref_spectrogram_windowLength(),
-					my instancePref_spectrogram_viewTo(),
-					(my endWindow() - my startWindow()) / my instancePref_spectrogram_timeSteps(),
-					my instancePref_spectrogram_viewTo() / my instancePref_spectrogram_frequencySteps(),
-					my instancePref_spectrogram_windowShape(), 8.0, 8.0
-				);
+				autoSpectrogram spectrogram = computeSpectrogram(me,channel.get());
 				spectrogram -> xmin = my startWindow();
 				spectrogram -> xmax = my endWindow();
 				my d_spectrogramList -> addItem_move (spectrogram.move());
 			}
 		} else {
-			autoSpectrogram spectrogram = Sound_to_Spectrogram_e (sound.get(),
-				my instancePref_spectrogram_windowLength(),
-				my instancePref_spectrogram_viewTo(),
-				(my endWindow() - my startWindow()) / my instancePref_spectrogram_timeSteps(),
-				my instancePref_spectrogram_viewTo() / my instancePref_spectrogram_frequencySteps(),
-				my instancePref_spectrogram_windowShape(), 8.0, 8.0
-			);
+			autoSpectrogram spectrogram = computeSpectrogram(me,sound.get());
 			my d_spectrogramList -> addItem_move (spectrogram.move());
 		}
 	} catch (MelderError) {
@@ -947,6 +953,8 @@ static void menu_cb_showSpectrogram (SoundAnalysisArea me, EDITOR_ARGS) {
 	VOID_EDITOR_END
 }
 
+#include "samples/AnalysisSamples.inc"
+
 static void menu_cb_spectrogramSettings (SoundAnalysisArea me, EDITOR_ARGS) {
 	EDITOR_FORM (U"Spectrogram settings", U"Intro 3.2. Configuring the spectrogram")
 		REAL     (viewFrom,     U"left View range (Hz)",  my default_spectrogram_viewFrom())
@@ -958,7 +966,7 @@ static void menu_cb_spectrogramSettings (SoundAnalysisArea me, EDITOR_ARGS) {
 	EDITOR_OK
 		SET_REAL (viewFrom,     my instancePref_spectrogram_viewFrom())
 		SET_REAL (viewTo,       my instancePref_spectrogram_viewTo())
-		SET_REAL (windowLength, my instancePref_spectrogram_windowLength())
+		SET_REAL (windowLength, my instancePref_spectrogram_useSamples() ? my instancePref_spectrogram_windowSamples()*my soundOrLongSound()->dx/(my instancePref_spectrogram_windowShape()==kSound_to_Spectrogram_windowShape::GAUSSIAN?2.0:1.0) : my instancePref_spectrogram_windowLength())
 		SET_REAL (dynamicRange, my instancePref_spectrogram_dynamicRange())
 		if (my instancePref_spectrogram_timeSteps()          != Melder_atof (my default_spectrogram_timeSteps()) ||
 			my instancePref_spectrogram_frequencySteps()     != Melder_atof (my default_spectrogram_frequencySteps()) ||
@@ -983,7 +991,11 @@ static void menu_cb_spectrogramSettings (SoundAnalysisArea me, EDITOR_ARGS) {
 			U"The ceiling of the spectrogram view range should be greater than the floor.");
 		my setInstancePref_spectrogram_viewFrom (viewFrom);
 		my setInstancePref_spectrogram_viewTo (viewTo);
-		my setInstancePref_spectrogram_windowLength (windowLength);
+		if(my instancePref_spectrogram_useSamples()){
+            const double expected=my instancePref_spectrogram_windowSamples()*my soundOrLongSound()->dx/(my instancePref_spectrogram_windowShape()==kSound_to_Spectrogram_windowShape::GAUSSIAN?2.0:1.0);
+            if(std::abs(windowLength-expected)>1e-12*std::max(windowLength,expected))my setInstancePref_spectrogram_useSamples(false);
+        }
+        my setInstancePref_spectrogram_windowLength (windowLength);
 		my setInstancePref_spectrogram_dynamicRange (dynamicRange);
 		my d_spectrogramList. reset();
 		FunctionEditor_redraw (my functionEditor());
@@ -1037,6 +1049,7 @@ static void menu_cb_advancedSpectrogramSettings (SoundAnalysisArea me, EDITOR_AR
 		my setInstancePref_spectrogram_frequencySteps (numberOfFrequencySteps);
 		my setInstancePref_spectrogram_method (method);
 		my setInstancePref_spectrogram_windowShape (windowShape);
+        if(my instancePref_spectrogram_useSamples())my setInstancePref_spectrogram_windowLength(my instancePref_spectrogram_windowSamples()*my soundOrLongSound()->dx/(windowShape==kSound_to_Spectrogram_windowShape::GAUSSIAN?2.0:1.0));
 		my setInstancePref_spectrogram_autoscaling (autoscaling);
 		my setInstancePref_spectrogram_maximum (maximum);
 		my setInstancePref_spectrogram_preemphasis (preemphasis);
@@ -1089,6 +1102,14 @@ static void CONVERT_DATA_TO_ONE__ExtractVisibleSpectrogram (SoundAnalysisArea me
 
 static void CONVERT_DATA_TO_ONE__ViewSpectralSlice (SoundAnalysisArea me, EDITOR_ARGS) {
 	CONVERT_DATA_TO_ONE
+        autoSpectrum result;
+        if(my instancePref_spectrogram_useSamples()){
+            SoundAnalysisArea_haveVisibleSpectrogram(me);
+            auto spectrum=Data_copy(my d_spectrogramList->at[1]);
+            for(integer channel=2;channel<=my d_spectrogramList->size;++channel)spectrum->z.all()+=my d_spectrogramList->at[channel]->z.all();
+            spectrum->z.all()/=my d_spectrogramList->size;
+            result=Spectrogram_to_Spectrum(spectrum.get(),0.5*(my startSelection()+my endSelection()));
+        }else{
 		const double start = ( my startSelection() == my endSelection() ?
 			my instancePref_spectrogram_windowShape() == kSound_to_Spectrogram_windowShape::GAUSSIAN ? my startSelection() - my instancePref_spectrogram_windowLength() :
 			my startSelection() - my instancePref_spectrogram_windowLength() / 2 : my startSelection()
@@ -1108,7 +1129,8 @@ static void CONVERT_DATA_TO_ONE__ViewSpectralSlice (SoundAnalysisArea me, EDITOR
 			my instancePref_spectrogram_windowShape() == kSound_to_Spectrogram_windowShape::HANNING ? kSound_windowShape::HANNING :
 			my instancePref_spectrogram_windowShape() == kSound_to_Spectrogram_windowShape::GAUSSIAN ? kSound_windowShape::GAUSSIAN_2 : kSound_windowShape::RECTANGULAR
 		);
-		autoSpectrum result = Sound_to_Spectrum (sound.get(), true);
+		result = Sound_to_Spectrum (sound.get(), true);
+        }
 	CONVERT_DATA_TO_ONE_END (Melder_cat (( my data() ? my data() -> name.get() : U"untitled" ),
 			U"_", Melder_fixed (0.5 * (my startSelection() + my endSelection()), 3)))
 }
@@ -2420,6 +2442,7 @@ void structSoundAnalysisArea :: v_createMenus () {
 		);
 		FunctionAreaMenu_addCommand (menu, U"Spectrogram settings...", 0,
 				menu_cb_spectrogramSettings, this);
+		FunctionAreaMenu_addCommand(menu,U"Analysis length in samples...",0,menu_cb_spectrogramSampleSettings,this);
 		FunctionAreaMenu_addCommand (menu, U"Spectrogram colour settings...", 0,
 				menu_cb_spectrogramColourSettings, this);
 		FunctionAreaMenu_addCommand (menu, U"Advanced spectrogram settings...", 0,
@@ -2684,7 +2707,7 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 		);
 		const bool undersampled = ( timeStep > greatestNonUndersamplingTimeStep );
 		const integer numberOfVisiblePitchPoints = (integer) ((my endWindow() - my startWindow()) / timeStep);   // BUG: why round down?
-		Graphics_setColour (my graphics(), Melder_CYAN);
+		ThemePaint_set(my graphics(), "analysis.pitch_secondary", Melder_CYAN);
 		Graphics_setLineWidth (my graphics(), 3.0);
 		const kSoundAnalysisArea_pitch_drawingMethod drawingMethod = my dynamic_instancePref_pitch_drawingMethod();
 		if ((drawingMethod == kSoundAnalysisArea_pitch_drawingMethod::AUTOMATIC && (undersampled || numberOfVisiblePitchPoints < 101)) ||
@@ -2697,7 +2720,7 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 		{
 			Pitch_drawInside (my d_pitch.get(), my graphics(), my startWindow(), my endWindow(), pitchViewFrom_overt, pitchViewTo_overt, false, pitchUnit);
 		}
-		Graphics_setColour (my graphics(), Melder_BLUE);
+		ThemePaint_set(my graphics(), "analysis.pitch", Melder_BLUE);
 		Graphics_setLineWidth (my graphics(), 1.0);
 		if ((drawingMethod == kSoundAnalysisArea_pitch_drawingMethod::AUTOMATIC && (undersampled || numberOfVisiblePitchPoints < 101)) ||
 		    drawingMethod == kSoundAnalysisArea_pitch_drawingMethod::SPECKLE)
@@ -2714,11 +2737,11 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 	if (my instancePref_intensity_show())
 		tryToHaveIntensity (me);
 	if (my instancePref_intensity_show() && my d_intensity) {
-		Graphics_setColour (my graphics(), Melder_LIME);
+		ThemePaint_set(my graphics(), "analysis.intensity", Melder_LIME);
 		Graphics_setLineWidth (my graphics(), 3.0);
 		Intensity_drawInside (my d_intensity.get(), my graphics(), my startWindow(), my endWindow(),
 				my instancePref_intensity_viewFrom(), my instancePref_intensity_viewTo());
-		Graphics_setColour (my graphics(), Melder_GREEN);
+		ThemePaint_set(my graphics(), "analysis.intensity", Melder_GREEN);
 		Graphics_setLineWidth (my graphics(), 1.0);
 		Intensity_drawInside (my d_intensity.get(), my graphics(), my startWindow(), my endWindow(),
 				my instancePref_intensity_viewFrom(), my instancePref_intensity_viewTo());
@@ -2733,7 +2756,7 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 	if (my instancePref_pitch_show()) {
 		double pitchCursor_overt = undefined, pitchCursor_hidden = undefined;
 		Graphics_setWindow (my graphics(), my startWindow(), my endWindow(), pitchViewFrom_hidden, pitchViewTo_hidden);
-		Graphics_setColour (my graphics(), 1.2 * Melder_BLUE);
+		ThemePaint_set(my graphics(), "analysis.pitch", 1.2 * Melder_BLUE);
 		if (my d_pitch) {
 			if (my startSelection() == my endSelection())
 				pitchCursor_hidden = Pitch_getValueAtTime (my d_pitch.get(), my startSelection(), pitchUnit, 1);
@@ -2741,13 +2764,13 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 				pitchCursor_hidden = Pitch_getMean (my d_pitch.get(), my startSelection(), my endSelection(), pitchUnit);
 			pitchCursor_overt = Function_convertToNonlogarithmic (my d_pitch.get(), pitchCursor_hidden, Pitch_LEVEL_FREQUENCY, (int) pitchUnit);
 			if (isdefined (pitchCursor_hidden)) {
-				Graphics_setColour (my graphics(), MelderColour (0.6, 0.0, 0.4));
+				ThemePaint_set(my graphics(), "analysis.cursor", MelderColour (0.6, 0.0, 0.4));
 				Graphics_setTextAlignment (my graphics(), Graphics_LEFT, Graphics_HALF);
 				Graphics_text (my graphics(), my endWindow(), pitchCursor_hidden,
 					Melder_graphicalHalf (pitchCursor_overt), U" ",
 					Function_getUnitText (my d_pitch.get(), Pitch_LEVEL_FREQUENCY, (int) pitchUnit, Function_UNIT_TEXT_SHORT | Function_UNIT_TEXT_GRAPHICAL)
 				);
-				Graphics_setColour (my graphics(), 1.2 * Melder_BLUE);
+				ThemePaint_set(my graphics(), "analysis.pitch", 1.2 * Melder_BLUE);
 			}
 			if (isundef (pitchCursor_hidden) || Graphics_dyWCtoMM (my graphics(), pitchCursor_hidden - pitchViewFrom_hidden) > 4.0) {
 				Graphics_setTextAlignment (my graphics(), Graphics_LEFT, Graphics_HALF);
@@ -2789,7 +2812,7 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 			vert = Graphics_HALF;
 			y = my startWindow();
 		} else {
-			textColour = ( my instancePref_spectrogram_show() ? Melder_LIME : 1.2 * Melder_GREEN );
+			textColour = ( Theme_colour("analysis.intensity", my instancePref_spectrogram_show() ? Melder_LIME : 1.2 * Melder_GREEN) );
 			hor = Graphics_RIGHT;
 			vert = -1;
 			y = my endWindow();
@@ -2803,7 +2826,7 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 					intensityCursor = Intensity_getAverage (my d_intensity.get(), my startSelection(), my endSelection(), (int) my instancePref_intensity_averagingMethod());
 				}
 			}
-			Graphics_setColour (my graphics(), textColour);
+			ThemePaint_set(my graphics(), "analysis.intensity", textColour);
 			const bool intensityCursorVisible = ( isdefined (intensityCursor) &&
 					intensityCursor > my instancePref_intensity_viewFrom() && intensityCursor < my instancePref_intensity_viewTo() );
 			if (intensityCursorVisible) {
@@ -2865,7 +2888,7 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 	}
 	if (spectrogramUnavailable) {
 		const double windowLength = my instancePref_spectrogram_windowLength();
-		const double physicalWindow = windowLength *
+		const double physicalWindow = my instancePref_spectrogram_useSamples() ? my instancePref_spectrogram_windowSamples()*my soundOrLongSound()->dx : windowLength *
 			(my instancePref_spectrogram_windowShape() == kSound_to_Spectrogram_windowShape::GAUSSIAN ? 2.0 : 1.0);
 		const SampledXY source = my soundOrLongSound();
 		const bool windowTooLong = source && physicalWindow > source -> nx * source -> dx;
@@ -2876,7 +2899,7 @@ static void SoundAnalysisArea_v_draw_analysis (SoundAnalysisArea me) {
 		Graphics_setTextAlignment (my graphics(), Graphics_CENTRE, Graphics_TOP);
 		if (windowTooLong) {
 			Graphics_text (my graphics(), 0.5, 0.98,
-				U"Spectrogram unavailable: window length ", Melder_half (windowLength), U" s is too long for this sound.");
+				U"Spectrogram unavailable: physical window ", Melder_half (physicalWindow), U" s is too long for this sound.");
 			Graphics_text (my graphics(), 0.5, 0.90,
 				U"Reduce Window length in Spectrogram > Spectrogram settings.");
 		} else {
@@ -2895,10 +2918,11 @@ void structSoundAnalysisArea :: v_draw_analysis_formants () {
 		tryToHaveFormants (this);
 	if (our instancePref_formant_show() && our d_formant) {
 		Graphics_setSpeckleSize (our graphics(), our instancePref_formant_dotSize());
+		{ ThemePaint_Explicit explicitFormantColours(our graphics());
 		Formant_drawSpeckles_inside (our d_formant.get(), our graphics(), our startWindow(), our endWindow(),
 			our v_spectrogramViewFrom(), our v_spectrogramViewTo(), our instancePref_formant_dynamicRange(),
-			Melder_RED, Melder_PINK, true
-		);
+			Theme_colour("analysis.formants", Melder_RED), Theme_colour("analysis.formants_secondary", Melder_PINK), true
+		); }
 		Graphics_setColour (our graphics(), Melder_BLACK);
 	}
 }
@@ -2909,7 +2933,7 @@ void structSoundAnalysisArea :: v_draw_analysis_pulses () {
 	if (our instancePref_pulses_show() && our endWindow() - our startWindow() <= our instancePref_longestAnalysis() && our d_pulses) {
 		PointProcess point = our d_pulses.get();
 		Graphics_setWindow (our graphics(), our startWindow(), our endWindow(), -1.0, 1.0);
-		Graphics_setColour (our graphics(), our editable() ? DataGuiColour_EDITABLE : Melder_SILVER);
+		ThemePaint_set(our graphics(), "analysis.pulses", our editable() ? DataGuiColour_EDITABLE : Melder_SILVER);
 		Graphics_setLineWidth (our graphics(), 2.0);
 		if (point -> nt < 2000) for (integer i = 1; i <= point -> nt; i ++) {
 			const double t = point -> t [i];

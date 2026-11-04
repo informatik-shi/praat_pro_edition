@@ -62,8 +62,8 @@ DIRECT(EDIT_Pro_selected){
         else if(CLASS==classTextGrid){Melder_require(!grid,U"Select only one TextGrid.");grid=(TextGrid)OBJECT;}
         else if(CLASS==classFrequencyTrajectories){Melder_require(!tracks,U"Select only one FrequencyTrajectories.");tracks=(FrequencyTrajectories)OBJECT;}
         else if(CLASS==classSmartSpectrogram){Melder_require(!smart,U"Select only one SmartSpectrogram.");smart=(SmartSpectrogram)OBJECT;}
-        else if(CLASS==classSpectrogram){Melder_require(!spectrogram,U"Select only one Spectrogram.");spectrogram=(Spectrogram)OBJECT;}
-        else Melder_throw(U"The combined editor supports Sound, TextGrid, FrequencyTrajectories, SmartSpectrogram and Spectrogram.");
+        else if(CLASS==classSpectrogram||Thing_isSubclass(CLASS,classSpectrogram)){Melder_require(!spectrogram,U"Select only one Spectrogram.");spectrogram=(Spectrogram)OBJECT;}
+        else Melder_throw(U"The combined editor supports Sound, TextGrid, FrequencyTrajectories, SmartSpectrogram, Spectrogram and SpectrogramS.");
     }
     Melder_require(sound&&tracks,U"Select one Sound and one FrequencyTrajectories object for the combined editor.");
     autoProSoundEditor editor=ProSoundEditor_create(Melder_cat(U"Sound ",Thing_getName(sound),U" + selected layers"),sound,grid,tracks,smart,spectrogram);

@@ -1,3 +1,4 @@
+#include "samples/SpectrogramS.h"
 /* praat_uvafon_init.cpp
  *
  * Copyright (C) 1992-2026 Paul Boersma
@@ -2998,6 +2999,7 @@ void praat_uvafon_init () {
 	praat_Tiers_init ();
 	{ extern void praat_FrequencyTrajectories_init(); praat_FrequencyTrajectories_init(); }
 	{ extern void praat_SmartSpectrogram_init(); praat_SmartSpectrogram_init(); }
+	{ extern void praat_SpectrogramS_init(); praat_SpectrogramS_init(); }
 
 	praat_addMenuCommand (U"Objects", U"New", U"-- new stats --",
 			nullptr, 0, nullptr);
@@ -3531,32 +3533,35 @@ praat_addAction1 (classParamCurve, 0, U"Draw", nullptr, 0, nullptr);
 	praat_addAction1 (classPolygon, 0, U"Hack -", nullptr, 0, nullptr);
 		praat_addAction1 (classPolygon, 0, U"To Matrix", nullptr, 1, NEW_Polygon_to_Matrix);
 
-	praat_addAction1 (classSpectrogram, 0, U"Spectrogram help",
+	for(auto spectrogramClass : {classSpectrogram,classSpectrogramS}) {
+	praat_addAction1 (spectrogramClass, 0, U"Spectrogram help",
 			nullptr, 0, HELP_Spectrogram_help);
-	praat_addAction1 (classSpectrogram, 1, U"View",
-			nullptr, 0, EDITOR_ONE_Spectrogram_view);
-	praat_addAction1 (classSpectrogram, 1, U"Play movie || Movie",
+	if(spectrogramClass==classSpectrogram)
+        praat_addAction1 (spectrogramClass, 1, U"View", nullptr, 0, EDITOR_ONE_Spectrogram_view);
+	praat_addAction1 (spectrogramClass, 1, U"Play movie || Movie",
 			nullptr, 0, MOVIE_Spectrogram_playMovie);
-	praat_addAction1 (classSpectrogram, 0, U"Query -", nullptr, 0, nullptr);
-		praat_TimeFrameSampled_query_init (classSpectrogram);
-		praat_addAction1 (classSpectrogram, 1, U"Get power at...",
+	praat_addAction1 (spectrogramClass, 0, U"Query -", nullptr, 0, nullptr);
+		praat_TimeFrameSampled_query_init (spectrogramClass);
+		praat_addAction1 (spectrogramClass, 1, U"Get power at...",
 				nullptr, 1, REAL_Spectrogram_getPowerAt);
-	praat_addAction1 (classSpectrogram, 0, U"Draw -", nullptr, 0, nullptr);
-		praat_addAction1 (classSpectrogram, 0, U"Paint...",
+	praat_addAction1 (spectrogramClass, 0, U"Draw -", nullptr, 0, nullptr);
+		praat_addAction1 (spectrogramClass, 0, U"Paint...",
 				nullptr, 1, GRAPHICS_Spectrogram_paint);
-	praat_addAction1 (classSpectrogram, 0, U"Analyse -", nullptr, 0, nullptr);
-		praat_addAction1 (classSpectrogram, 0, U"To Spectrum (slice)...",
+	praat_addAction1 (spectrogramClass, 0, U"Analyse -", nullptr, 0, nullptr);
+		praat_addAction1 (spectrogramClass, 0, U"To Spectrum (slice)...",
 				nullptr, 1, NEW_Spectrogram_to_Spectrum);
-	praat_addAction1 (classSpectrogram, 0, U"Synthesize -", nullptr, 0, nullptr);
-		praat_addAction1 (classSpectrogram, 0, U"To Sound...",
+	praat_addAction1 (spectrogramClass, 0, U"Synthesize -", nullptr, 0, nullptr);
+		praat_addAction1 (spectrogramClass, 0, U"To Sound...",
 				nullptr, 1, NEW_Spectrogram_to_Sound);
-	praat_addAction1 (classSpectrogram, 0, U"Modify -", nullptr, 0, nullptr);
-		praat_TimeFunction_modify_init (classSpectrogram);
-		praat_addAction1 (classSpectrogram, 0, U"Formula...",
+	praat_addAction1 (spectrogramClass, 0, U"Modify -", nullptr, 0, nullptr);
+		if(spectrogramClass==classSpectrogram) praat_TimeFunction_modify_init (spectrogramClass);
+		praat_addAction1 (spectrogramClass, 0, U"Formula...",
 				nullptr, 1, MODIFY_Spectrogram_formula);
-	praat_addAction1 (classSpectrogram, 0, U"Hack -", nullptr, 0, nullptr);
-		praat_addAction1 (classSpectrogram, 0, U"To Matrix",
+	praat_addAction1 (spectrogramClass, 0, U"Hack -", nullptr, 0, nullptr);
+		praat_addAction1 (spectrogramClass, 0, U"To Matrix",
 				nullptr, 1, NEW_Spectrogram_to_Matrix);
+
+	}
 
 	praat_addAction1 (classSpectrum, 0, U"Spectrum help",
 			nullptr, 0, HELP_Spectrum_help);

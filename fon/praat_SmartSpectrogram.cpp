@@ -3,6 +3,16 @@
 #include "praatM.h"
 #include "SmartSpectrogram.h"
 #include "SmartSpectrogramEditor.h"
+#include "smart/FrameAccess.h"
+
+FORM(CONVERT_SmartSpectrogram_nearestSpectrum,U"Extract nearest period spectrum",nullptr) {
+    REAL(time,U"Time (s)",U"0")
+    OK
+DO
+    CONVERT_EACH_TO_ONE(SmartSpectrogram)
+        autoSpectrum result=SmartSpectrogram_to_Spectrum_nearest(me,time);
+    CONVERT_EACH_TO_ONE_END(Melder_cat(my name.get(),U"_period_",Melder_double(my times[SmartSpectrogram_nearestFrame(me,time)])))
+}
 
 FORM_READ (READ_SmartSpectrogram, U"Read SmartSpectrogram from CSV or TSV", nullptr, true) {
     READ_ONE
@@ -68,6 +78,7 @@ DO
 void praat_SmartSpectrogram_init () {
     structSmartSpectrogramArea::f_preferences ();
     Thing_recognizeClassesByName (classSmartSpectrogram);
+    praat_addAction1(classSmartSpectrogram,1,U"To Spectrum (nearest period)...",nullptr,0,CONVERT_SmartSpectrogram_nearestSpectrum);
     praat_addMenuCommand (U"Objects", U"Open", U"Read SmartSpectrogram from CSV/TSV...", nullptr, 0, READ_SmartSpectrogram);
     praat_addAction1 (classSmartSpectrogram, 1, U"View & Edit", nullptr, GuiMenu_ATTRACTIVE, EDIT_SmartSpectrogram);
     praat_addAction2 (classSmartSpectrogram, 1, classSound, 1, U"View & Edit", nullptr, GuiMenu_ATTRACTIVE, EDIT_SmartSpectrogram);

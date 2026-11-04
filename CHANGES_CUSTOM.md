@@ -1,5 +1,21 @@
 # Changes relative to Praat 7.0.02
 
+- Windows TextGrid/Sound annotation editors have a searchable Keyboard shortcuts
+  window with assignment, conflict checks, disable/default, and live reload.
+  Settings persist separately in praat-textgrid-shortcuts.ini and apply across
+  open TextGrid editors. See docs/annotation-shortcuts.md.
+
+- Exact sample-count analysis settings in Sound/LongSound editors, with live
+  milliseconds and transform method previews. SpectrogramS preserves analysis
+  metadata, supports standalone and Sound views, and converts losslessly to/from
+  Spectrogram values. Power-of-two transform lengths use FFT; other lengths use
+  direct DFT, without implicit zero padding. See docs/spectrogram-s.md.
+
+- Dark Windows interface and a shared `praat-theme.ini` palette for native windows,
+  Praat/Lua code editors, waveforms, spectra, pitch, intensity, formants and
+  FrequencyTrajectories. Screen palettes are separate from Picture exports.
+  Light and original appearance are available through the INI. See docs/theme.md.
+
 - Sound editors explain unavailable spectrogram analysis in the plot, including
   an analysis window that is too long for the sound, instead of silently leaving
   an empty background. Reducing the window length restores the spectrum.

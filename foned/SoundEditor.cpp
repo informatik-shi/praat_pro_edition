@@ -1,3 +1,4 @@
+#include "theme/Paint.h"
 /* SoundEditor.cpp
  *
  * Copyright (C) 1992-2022 Paul Boersma
@@ -31,6 +32,7 @@ void structSoundEditor::drawLuaPlots(){
     auto area=soundAnalysisArea().get();double bottom=dataBottom_pxlt(),height=dataTop_pxlt()-bottom;
     PlotRect overlay{dataLeft_pxlt(),dataRight_pxlt(),bottom,dataTop_pxlt()};
     if(area->hasContentToShow()){FunctionArea_setViewport(area);Graphics_inqViewport(graphics.get(),&overlay.left,&overlay.right,&overlay.bottom,&overlay.top);}
+    ThemePaint_Explicit explicitPlotColours(graphics.get());
     PlotHost_draw(this,graphics.get(),{dataLeft_pxlt(),dataRight_pxlt(),bottom,bottom+.28*height},
         overlay,
         area->instancePref_spectrogram_viewFrom(),area->instancePref_spectrogram_viewTo(),area->instancePref_spectrogram_show());

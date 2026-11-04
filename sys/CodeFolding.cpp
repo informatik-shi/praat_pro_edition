@@ -1,3 +1,4 @@
+#include "Theme.h"
 // Praat Custom. GPL-3.0-or-later.
 #include "codefold/CodeFolding.h"
 #if defined (_WIN32)
@@ -115,7 +116,8 @@ LRESULT CALLBACK laneProc(HWND w,UINT m,WPARAM wp,LPARAM lp,UINT_PTR,DWORD_PTR d
     }
     if(m==WM_PAINT) {
         PAINTSTRUCT ps;HDC dc=BeginPaint(w,&ps);RECT r;GetClientRect(w,&r);
-        FillRect(dc,&r,(HBRUSH)(COLOR_BTNFACE+1));self->hits.clear();
+        auto bg=CreateSolidBrush(Theme_nativeColour("editor.gutter",GetSysColor(COLOR_BTNFACE)));FillRect(dc,&r,bg);
+        auto pen=CreatePen(PS_SOLID,1,Theme_nativeColour("editor.line_number",RGB(80,80,80)));auto oldPen=SelectObject(dc,pen);auto oldBrush=SelectObject(dc,bg);self->hits.clear();
         long first=(long)SendMessageW(self->text,EM_LINEINDEX,SendMessageW(self->text,EM_GETFIRSTVISIBLELINE,0,0),0);
         POINTL bottom{self->left+24,r.bottom};
         long last=(long)SendMessageW(self->text,EM_CHARFROMPOS,0,(LPARAM)&bottom);
@@ -129,7 +131,7 @@ LRESULT CALLBACK laneProc(HWND w,UINT m,WPARAM wp,LPARAM lp,UINT_PTR,DWORD_PTR d
             if(b.collapsed){MoveToEx(dc,8,p.y+4,nullptr);LineTo(dc,8,p.y+12);}
             self->hits.push_back({box,i});
         }
-        EndPaint(w,&ps);return 0;
+        SelectObject(dc,oldPen);SelectObject(dc,oldBrush);DeleteObject(pen);DeleteObject(bg);EndPaint(w,&ps);return 0;
     }
     return DefSubclassProc(w,m,wp,lp);
 }

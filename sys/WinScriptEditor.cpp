@@ -1,3 +1,5 @@
+#include "CodeAssist.h"
+#include "Theme.h"
 // Praat Custom Script IDE. GPL-3.0-or-later.
 #include "WinScriptEditor.h"
 #include "ScriptEditor.h"
@@ -16,20 +18,20 @@
 
 namespace {
 struct EditorTheme {
-    COLORREF text=RGB(32,35,40), background=RGB(255,255,255), gutter=RGB(242,244,247),
-        number=RGB(103,111,123), breakpoint=RGB(190,45,50), execution=RGB(255,239,167);
+    COLORREF text=Theme_nativeColour("editor.text", RGB(32,35,40)), background=Theme_nativeColour("editor.background", RGB(255,255,255)), gutter=Theme_nativeColour("editor.gutter", RGB(242,244,247)),
+        number=Theme_nativeColour("editor.line_number", RGB(103,111,123)), breakpoint=Theme_nativeColour("editor.breakpoint", RGB(190,45,50)), execution=Theme_nativeColour("editor.execution", RGB(255,239,167));
     COLORREF colour (ScriptToken token) const {
         switch(token) {
-            case ScriptToken::Keyword: return RGB(28,69,179);
-            case ScriptToken::Form: return RGB(115,55,150);
-            case ScriptToken::Comment: return RGB(58,120,69);
-            case ScriptToken::String: return RGB(155,55,37);
-            case ScriptToken::Number: return RGB(126,57,150);
-            case ScriptToken::StringVariable: return RGB(147,78,28);
-            case ScriptToken::Array: return RGB(12,111,122);
-            case ScriptToken::Function: return RGB(0,99,130);
-            case ScriptToken::Procedure: return RGB(139,40,146);
-            case ScriptToken::Command: return RGB(18,93,128);
+            case ScriptToken::Keyword: return Theme_nativeColour("syntax.keyword", RGB(28,69,179));
+            case ScriptToken::Form: return Theme_nativeColour("syntax.form", RGB(115,55,150));
+            case ScriptToken::Comment: return Theme_nativeColour("syntax.comment", RGB(58,120,69));
+            case ScriptToken::String: return Theme_nativeColour("syntax.string", RGB(155,55,37));
+            case ScriptToken::Number: return Theme_nativeColour("syntax.number", RGB(126,57,150));
+            case ScriptToken::StringVariable: return Theme_nativeColour("syntax.string_variable", RGB(147,78,28));
+            case ScriptToken::Array: return Theme_nativeColour("syntax.array", RGB(12,111,122));
+            case ScriptToken::Function: return Theme_nativeColour("syntax.function", RGB(0,99,130));
+            case ScriptToken::Procedure: return Theme_nativeColour("syntax.procedure", RGB(139,40,146));
+            case ScriptToken::Command: return Theme_nativeColour("syntax.command", RGB(18,93,128));
             default: return text;
         }
     }
@@ -374,6 +376,7 @@ LRESULT CALLBACK shellProc(HWND window,UINT message,WPARAM wp,LPARAM lp,UINT_PTR
 void WinScriptEditor_create (ScriptEditor editor) {
     auto self=new WinIDE(editor);editors[editor]=self;
     self->text=editor->textWidget->d_widget->window;
+    SendMessageW(self->text,EM_SETBKGNDCOLOR,0,self->theme.background);
     self->host=GetParent(self->text);
     self->shell=GetAncestor(self->text,GA_ROOT);
     self->font=CreateFontW(14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,0,0,0,FIXED_PITCH,L"Consolas");
@@ -400,8 +403,10 @@ void WinScriptEditor_create (ScriptEditor editor) {
     SetWindowSubclass(self->shell,shellProc,771,(DWORD_PTR)self);
     SetTimer(self->text,771,100,nullptr);self->layout();self->showPanel();
     CodeFolding_install(editor->textWidget,64,false);
+    CodeAssist_install(editor->textWidget,false);
 }
 void WinScriptEditor_destroy (ScriptEditor editor) {
+    CodeAssist_destroy(editor->textWidget);
     CodeFolding_destroy(editor->textWidget);
     auto it=editors.find(editor);if(it==editors.end())return;auto self=it->second;
     self->lock(false);KillTimer(self->text,771);

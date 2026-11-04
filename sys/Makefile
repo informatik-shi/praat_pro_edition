@@ -11,12 +11,12 @@ OBJECTS = Thing.o Data.o Simple.o Collection.o Strings.o \
    GraphicsPostscript.o Graphics_surface.o \
    ManPage.o ManPages.o ManPages_toHtml.o Script.o Notebook.o machine.o \
    GraphicsScreen.o Printer.o \
-   Preferences.o site.o \
+   Preferences.o Theme.o ThemeWin.o site.o \
    Picture.o Ui.o UiFile.o UiPause.o DataGui.o Editor.o DataEditor.o HyperPage.o Manual.o TextEditor.o \
    praat.o praat_actions.o praat_menuCommands.o praat_picture.o \
    praat_script.o praat_statistics.o praat_logo.o praat_library.o \
    praat_objectMenus.o InfoEditor.o ScriptEditor.o NotebookEditor.o ButtonEditor.o ScriptExecution.o \
-   luaplot/PlotHost.o luaplot/LuaPlot.o luaplot/PlotRenderer.o luaplot/PlotWindow.o luadebug/LuaDebugger.o CodeFolding.o LuaRuntime.o LuaEditor.o Interpreter.o Formula.o ScriptDebugger.o ScriptSyntax.o WinScriptEditor.o \
+   luaplot/PlotHost.o luaplot/LuaPlot.o luaplot/PlotRenderer.o luaplot/PlotWindow.o luadebug/LuaDebugger.o CodeFolding.o LuaRuntime.o LuaEditor.o Interpreter.o Formula.o ScriptDebugger.o ScriptSyntax.o CodeAssist.o WinScriptEditor.o \
    StringsEditor.o DemoEditor.o \
    motifEmulator.o GuiText.o GuiWindow.o Gui.o GuiObject.o GuiDrawingArea.o \
    GuiMenu.o GuiMenuItem.o GuiButton.o GuiLabel.o GuiCheckButton.o GuiRadioButton.o \
@@ -48,3 +48,7 @@ LuaRuntime.o luaplot/LuaPlot.o: luaplot/LuaPlot.h
 luaplot/LuaPlot.o luaplot/PlotRenderer.o luaplot/PlotWindow.o: luaplot/PlotModel.h
 luaplot/LuaPlot.o: luaplot/plot.lua.inc
 luaplot/PlotHost.o luaplot/LuaPlot.o: luaplot/PlotHost.h luaplot/PlotModel.h
+
+CodeAssist.o: codefold/AssistModel.h codefold/CodeFolding.h
+
+Theme.o: theme/Palette.h

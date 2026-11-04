@@ -2,6 +2,8 @@
 
 Custom Windows build: [combined Sound editor](docs/combined-editor.md), [Pro menu and SBL import](docs/pro-menu.md), [Read seg files](docs/read-seg-files.md), [Lua Editor and API](docs/lua.md),
 [SmartSpectrogram](docs/smart-spectrogram.md),
+[разметка и свои горячие клавиши](docs/annotation-shortcuts.md),
+[SpectrogramS: анализ по отсчётам, FFT/ДПФ](docs/spectrogram-s.md),
 [Lua debugger](docs/lua-debugger.md),
 [Lua plotting](docs/lua-plot.md),
 [практическая методичка Lua](docs/tutorials/lua-plots/README.md),

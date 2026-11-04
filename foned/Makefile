@@ -20,6 +20,7 @@ OBJECTS = FrequencyTrajectoriesEditor.o SmartSpectrogramEditor.o ProSoundEditor.
 all: libfoned.a
 
 SoundEditor.o ProSoundEditor.o SpectrogramEditor.o: ../sys/luaplot/PlotHost.h ../sys/luaplot/PlotModel.h
+SmartSpectrogramEditor.o ProSoundEditor.o: smart/PowerDisplay.h
 
 clean:
 	$(RM) $(OBJECTS)
@@ -32,3 +33,11 @@ libfoned.a: $(OBJECTS)
 	$(RANLIB) libfoned.a
 
 $(OBJECTS): *.h ../external/portaudio/*.h ../kar/*.h ../melder/*.h ../sys/*.h ../dwsys/*.h ../stat/*.h ../dwtools/*.h ../LPC/*.h ../fon/*.h ../external/flac/*.h ../external/mp3/mp3.h
+
+SmartSpectrogramEditor.o ProSoundEditor.o: ../fon/smart/FrameAccess.h
+
+SoundArea.o SoundAnalysisArea.o SoundEditor.o SpectrumArea.o ProSoundEditor.o SmartSpectrogramEditor.o: ../sys/theme/Paint.h
+
+SoundAnalysisArea.o: samples/AnalysisSamples.inc ../fon/samples/SpectrogramS.h
+
+TextGridEditor.o: shortcuts/TextGridHotkeys.inc shortcuts/Model.h

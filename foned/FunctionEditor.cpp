@@ -1,3 +1,4 @@
+#include "theme/Paint.h"
 /* FunctionEditor.cpp
  *
  * Copyright (C) 1992-2026 Paul Boersma
@@ -275,7 +276,7 @@ static void drawBackgroundAndData (FunctionEditor me) {
 					/*
 						Window domain text.
 					*/
-					Graphics_setColour (my graphics.get(), Melder_BLUE);
+					ThemePaint_set(my graphics.get(), "analysis.pitch", Melder_BLUE);
 					Graphics_setTextAlignment (my graphics.get(), Graphics_LEFT, Graphics_HALF);
 					Graphics_text (my graphics.get(), left, 0.5 * (bottom + top) - verticalCorrection,
 							Melder_fixed (my startWindow, my v_fixedPrecision_long ()));
@@ -330,7 +331,7 @@ static void drawBackgroundAndData (FunctionEditor me) {
 	/*
 		Red marker text.
 	*/
-	Graphics_setColour (my graphics.get(), Melder_RED);
+	ThemePaint_set(my graphics.get(), "analysis.cursor", Melder_RED);
 	if (cursorIsVisible) {
 		Graphics_setTextAlignment (my graphics.get(), Graphics_CENTRE, Graphics_BOTTOM);
 		Graphics_text (my graphics.get(), my startSelection, my height_pxlt - (my TOP_MARGIN + my space*0.9) - verticalCorrection * 7,
@@ -360,7 +361,7 @@ static void drawBackgroundAndData (FunctionEditor me) {
 		Red dotted marker lines.
 	*/
 	my viewDataAsWorldByFraction ();
-	Graphics_setColour (my graphics.get(), Melder_RED);
+	ThemePaint_set(my graphics.get(), "analysis.cursor", Melder_RED);
 	Graphics_setLineType (my graphics.get(), Graphics_DOTTED);
 	if (cursorIsVisible)
 		Graphics_line (my graphics.get(), my startSelection, 0.0, my startSelection, 1.0);
@@ -1646,6 +1647,7 @@ void FunctionEditor_init (FunctionEditor me, conststring32 title, Function data)
 		Melder_assert (XtWindow (my drawingArea -> d_widget));
 	#endif
 	my graphics = Graphics_create_xmdrawingarea (my drawingArea);
+	my graphics -> editorTheme = true;
 	Graphics_setFontSize (my graphics.get(), 12);
 
 	my updateGeometry (GuiControl_getWidth (my drawingArea), GuiControl_getHeight (my drawingArea));
@@ -1708,7 +1710,7 @@ void FunctionEditor_drawRangeMark (FunctionEditor me, double yWC, conststring32 
 	static MelderString text;
 	MelderString_copy (& text, yWC_string, units);
 	double textWidth = Graphics_textWidth (my graphics.get(), text.string) + Graphics_dxMMtoWC (my graphics.get(), 0.5);
-	Graphics_setColour (my graphics.get(), Melder_BLUE);
+	ThemePaint_set(my graphics.get(), "analysis.pitch", Melder_BLUE);
 	Graphics_line (my graphics.get(), my endWindow, yWC, my endWindow + textWidth, yWC);
 	Graphics_setTextAlignment (my graphics.get(), Graphics_LEFT, verticalAlignment);
 	if (verticalAlignment == Graphics_BOTTOM)
@@ -1737,13 +1739,13 @@ void FunctionEditor_insertCursorFunctionValue (FunctionEditor me, double yWC, co
 	MelderString_copy (& text, yWC_string, units);
 	double textWidth = Graphics_textWidth (my graphics.get(), text.string);
 	Graphics_fillCircle_mm (my graphics.get(), my endWindow + textWidth + Graphics_dxMMtoWC (my graphics.get(), 1.5), textY, 1.5);
-	Graphics_setColour (my graphics.get(), Melder_RED);
+	ThemePaint_set(my graphics.get(), "analysis.cursor", Melder_RED);
 	Graphics_setTextAlignment (my graphics.get(), Graphics_LEFT, Graphics_HALF);
 	Graphics_text (my graphics.get(), textX, textY, text.string);
 }
 
 void FunctionEditor_drawHorizontalHair (FunctionEditor me, double yWC, conststring32 yWC_string, conststring32 units) {
-	Graphics_setColour (my graphics.get(), Melder_RED);
+	ThemePaint_set(my graphics.get(), "analysis.cursor", Melder_RED);
 	Graphics_line (my graphics.get(), my startWindow, yWC, my endWindow, yWC);
 	Graphics_setTextAlignment (my graphics.get(), Graphics_RIGHT, Graphics_HALF);
 	Graphics_text (my graphics.get(), my startWindow, yWC,   yWC_string, units);

@@ -23,6 +23,7 @@ Thing_define (ProSoundAnalysisArea, SoundAnalysisArea) {
     SmartSpectrogram smartSpectrogram = nullptr;
     Spectrogram selectedSpectrogram = nullptr;
     bool useSmartSpectrogram = true;
+    bool smartInterpolateFrames = false;
     integer selectedTrack = 1;
     integer selectedPoint = 0;
     integer draggingPoint = 0;
@@ -38,6 +39,7 @@ DEFINE_FunctionArea_create (ProSoundAnalysisArea, Sound)
 Thing_define (ProSoundEditor, SoundEditor) {
     DEFINE_FunctionArea (3, ProTextGridArea, textGridArea)
     TextGrid referenceTextGrid = nullptr;
+    autoFrequencyTrajectories emptyTrajectories;
     ProSoundAnalysisArea overlayArea () {
         return static_cast<ProSoundAnalysisArea> (soundAnalysisArea().get());
     }

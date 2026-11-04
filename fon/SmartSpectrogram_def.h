@@ -10,6 +10,11 @@ oo_DEFINE_CLASS (SmartSpectrogram, Function)
     oo_OBJECT (Pitch, 1, pitch)
     oo_OBJECT (Intensity, 2, intensity)
     oo_OBJECT (FrequencyTrajectories, 0, trajectories)
+    oo_FROM (1)
+        oo_INTEGER (numberOfFrameIntervals)
+        oo_VEC (frameStarts, numberOfFrameIntervals)
+        oo_VEC (frameEnds, numberOfFrameIntervals)
+    oo_ENDFROM
     #if oo_DECLARING
         void v1_info () override;
         int v_domainQuantity () const override { return MelderQuantity_TIME_SECONDS; }

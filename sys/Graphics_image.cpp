@@ -17,6 +17,7 @@
  */
 
 #include "GraphicsP.h"
+#include "Theme.h"
 
 #include "../fon/Photo.h"
 
@@ -74,11 +75,15 @@ static void _GraphicsScreen_cellArrayOrImage (GraphicsScreen me,
 					grey [igrey] = cairo_pattern_create_rgb (v, v, v);
 				}
 			#elif gdi
-				static HBRUSH greyBrush [256];
+				static HBRUSH greyBrushes [2][256];
+				HBRUSH *greyBrush = greyBrushes[Theme_editorGraphics(me) ? 1 : 0];
 				RECT rect;
 				if (! greyBrush [0])
 					for (int igrey = 0; igrey <= 255; igrey ++)
-						greyBrush [igrey] = CreateSolidBrush (RGB (igrey, igrey, igrey));   // once
+						{
+                            auto c = Theme_editorGraphics(me) ? Theme_spectrogramGrey(igrey / 255.0) : MelderColour(igrey / 255.0);
+                            greyBrush [igrey] = CreateSolidBrush (RGB(c.red*255, c.green*255, c.blue*255));
+                        }   // once
 			#elif quartz
 				CGContextSetAlpha (my d_macGraphicsContext, 1.0);
 				CGContextSetBlendMode (my d_macGraphicsContext, kCGBlendModeNormal);
@@ -216,9 +221,10 @@ static void _GraphicsScreen_cellArrayOrImage (GraphicsScreen me,
 			#define PUT_PIXEL \
 				if (1) { \
 					unsigned char kar = value <= 0 ? 0 : value >= 255 ? 255 : (int) value; \
-					*pixelAddress ++ = kar; \
-					*pixelAddress ++ = kar; \
-					*pixelAddress ++ = kar; \
+					auto colour = Theme_editorGraphics(me) ? Theme_spectrogramGrey(kar / 255.0) : MelderColour(kar / 255.0); \
+                    *pixelAddress ++ = (unsigned char)(colour.blue * 255); \
+                    *pixelAddress ++ = (unsigned char)(colour.green * 255); \
+                    *pixelAddress ++ = (unsigned char)(colour.red * 255); \
 					*pixelAddress ++ = 0; \
 				}
 		#elif quartz

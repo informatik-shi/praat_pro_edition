@@ -25,6 +25,7 @@
 #include "melder.h"
 #include "GuiP.h"
 #include "machine.h"
+#include "Theme.h"
 
 static void (*theQuitApplicationCallback) ();
 
@@ -1818,6 +1819,8 @@ void * GuiWin_initialize1 (conststring32 name)
 }
 void GuiWin_initialize2 (unsigned int argc, char **argv)
 {
+	Theme_initialize();
+	Theme_installWindows();
 	WNDCLASSEX windowClass;
 	windowClass. cbSize = sizeof (WNDCLASSEX);
 	windowClass. style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS |
@@ -2404,6 +2407,40 @@ modifiers & _motif_COMMAND_MASK ? " control" : "",
 modifiers & _motif_OPTION_MASK ? " alt" : "",
 modifiers & _motif_SHIFT_MASK ? " shift" : "", message -> message == WM_KEYDOWN ? "keydown" : "syskeydown", kar);*/
 		if (me && my shell) {
+            // TextGrid annotation editors opt into exact, user-configured menu keys.
+            // Other windows and modal dialogs keep the original dispatcher unchanged.
+            if(GetPropW(my shell->window,L"Praat.AnnotationShortcuts")) {
+                int mapped=kar;
+                if(kar>=VK_F1&&kar<=VK_F12)mapped=kar-VK_F1+GuiMenu_F1;
+                else switch(kar){
+                    case VK_LEFT:mapped=GuiMenu_LEFT_ARROW;break;
+                    case VK_RIGHT:mapped=GuiMenu_RIGHT_ARROW;break;
+                    case VK_UP:mapped=GuiMenu_UP_ARROW;break;
+                    case VK_DOWN:mapped=GuiMenu_DOWN_ARROW;break;
+                    case VK_BACK:mapped=GuiMenu_BACKSPACE;break;
+                    case VK_TAB:mapped=GuiMenu_TAB;break;
+                    case VK_RETURN:mapped=GuiMenu_ENTER;break;
+                    case VK_ESCAPE:mapped=GuiMenu_ESCAPE;break;
+                    case VK_PRIOR:mapped=GuiMenu_PAGE_UP;break;
+                    case VK_NEXT:mapped=GuiMenu_PAGE_DOWN;break;
+                    case VK_HOME:mapped=GuiMenu_HOME;break;
+                    case VK_END:mapped=GuiMenu_END;break;
+                    case VK_INSERT:mapped=GuiMenu_INSERT;break;
+                    case VK_DELETE:mapped=GuiMenu_DELETE;break;
+                    case VK_PAUSE:mapped=GuiMenu_PAUSE;break;
+                    default:break;
+                }
+                bool textEditing=MEMBER(me,Text)&&(modifiers&_motif_COMMAND_MASK)&&!(modifiers&_motif_OPTION_MASK)&&
+                    (kar=='A'||kar=='C'||kar=='X'||kar=='V'||kar=='Z');
+                bool found=false;
+                if(!textEditing)for(int imenu=1;imenu<=MAXIMUM_NUMBER_OF_MENUS&&!found;++imenu)
+                    if(theMenus[imenu]&&theMenus[imenu]->shell==my shell)
+                        for(GuiObject child=theMenus[imenu]->firstChild;child;child=child->nextSibling)
+                            if(MEMBER2(child,PushButton,ToggleButton)&&!child->insensitive&&
+                                child->motiff.pushButton.acceleratorChar==mapped&&
+                                child->motiff.pushButton.acceleratorModifiers==modifiers){found=true;break;}
+                if(found&&win_shell_processKeyboardEquivalent(my shell,mapped,modifiers))return;
+            }
 			uint32 acc = my shell -> motiff.shell.lowAccelerators [modifiers];
 			//if (kar != VK_CONTROL) Melder_casual ("%d %d", acc, kar);
 			if (kar < 48) {

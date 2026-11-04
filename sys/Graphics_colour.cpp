@@ -17,6 +17,7 @@
  */
 
 #include "GraphicsP.h"
+#include "Theme.h"
 
 #if quartz
 	#include "macport_on.h"
@@ -50,6 +51,7 @@ void _Graphics_setColour (Graphics graphics, MelderColour colour) {
 }
 
 void Graphics_setColour (Graphics me, MelderColour colour) {
+	if (Theme_editorGraphics(me)) colour = Theme_editorColour(colour);
 	my colour = colour;
 	_Graphics_setColour (me, colour);
 	if (my recording) { op (SET_RGB_COLOUR, 3); put (colour. red); put (colour. green); put (colour. blue); }
@@ -86,6 +88,7 @@ void _Graphics_setGrey (Graphics graphics, double fgrey) {
 }
 
 void Graphics_setGrey (Graphics me, double grey) {
+	if (Theme_editorGraphics(me)) { Graphics_setColour(me, Theme_editorColour(MelderColour(grey))); return; }
 	my colour. red = my colour. green = my colour. blue = grey;
 	_Graphics_setGrey (me, grey);
 	if (my recording) { op (SET_GREY, 1); put (grey); }
@@ -106,14 +109,15 @@ static void highlight (Graphics graphics, integer x1DC, integer x2DC, integer y1
 			cairo_rectangle (my d_cairoGraphicsContext, x1DC, y2DC, width, height);
 			cairo_fill (my d_cairoGraphicsContext);
 		#elif gdi
-			static HBRUSH highlightBrush;
+			static HBRUSH highlightBrushes[2];
+			HBRUSH &highlightBrush = highlightBrushes[Theme_editorGraphics(me) ? 1 : 0];
 			RECT rect;
 			rect. left = x1DC, rect. right = x2DC, rect. top = y2DC, rect. bottom = y1DC;
 			if (! highlightBrush)
-				highlightBrush = CreateSolidBrush (RGB (255, 210, 210));
+				highlightBrush = CreateSolidBrush (Theme_editorGraphics(me) ? Theme_nativeColour("analysis.selection", RGB(255,210,210)) : RGB(255,210,210));
 			SelectPen (my d_gdiGraphicsContext, GetStockPen (NULL_PEN));
 			SelectBrush (my d_gdiGraphicsContext, highlightBrush);
-			SetROP2 (my d_gdiGraphicsContext, R2_MASKPEN);   // using a built-in pixel-combination formula; both R2_NOTXORPEN and R2_MASKPEN make some sense
+			SetROP2 (my d_gdiGraphicsContext, Theme_editorGraphics(me) && Theme_dark() ? R2_MERGEPEN : R2_MASKPEN);   // using a built-in pixel-combination formula; both R2_NOTXORPEN and R2_MASKPEN make some sense
 			Rectangle (my d_gdiGraphicsContext, x1DC, y2DC, x2DC + 1, y1DC + 1);
 			SetROP2 (my d_gdiGraphicsContext, R2_COPYPEN);
 			SelectPen (my d_gdiGraphicsContext, GetStockPen (BLACK_PEN));
@@ -168,12 +172,13 @@ static void highlight2 (Graphics graphics, integer x1DC, integer x2DC, integer y
 			cairo_rectangle (my d_cairoGraphicsContext, x1DC, y1DC_inner, x2DC - x1DC, y1DC - y1DC_inner); // lower
 			cairo_fill (my d_cairoGraphicsContext);
 		#elif gdi
-			static HBRUSH highlightBrush;
+			static HBRUSH highlightBrushes[2];
+			HBRUSH &highlightBrush = highlightBrushes[Theme_editorGraphics(me) ? 1 : 0];
 			if (! highlightBrush)
-				highlightBrush = CreateSolidBrush (RGB (255, 210, 210));
+				highlightBrush = CreateSolidBrush (Theme_editorGraphics(me) ? Theme_nativeColour("analysis.selection", RGB(255,210,210)) : RGB(255,210,210));
 			SelectPen (my d_gdiGraphicsContext, GetStockPen (NULL_PEN));
 			SelectBrush (my d_gdiGraphicsContext, highlightBrush);
-			SetROP2 (my d_gdiGraphicsContext, R2_MASKPEN);
+			SetROP2 (my d_gdiGraphicsContext, Theme_editorGraphics(me) && Theme_dark() ? R2_MERGEPEN : R2_MASKPEN);
 			Rectangle (my d_gdiGraphicsContext, x1DC, y2DC, x2DC + 1, y2DC_inner + 1);
 			Rectangle (my d_gdiGraphicsContext, x1DC, y2DC_inner, x1DC_inner + 1, y1DC_inner + 1);
 			Rectangle (my d_gdiGraphicsContext, x2DC_inner, y2DC_inner, x2DC + 1, y1DC_inner + 1);

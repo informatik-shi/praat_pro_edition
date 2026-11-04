@@ -1,5 +1,6 @@
 // Praat Pro Edition. GPL-3.0-or-later.
 #include "SmartSpectrogram.h"
+#include "smart/FrameAccess.h"
 #include <algorithm>
 #include <cmath>
 #include <string>
@@ -24,7 +25,7 @@
 #include "oo_DESCRIPTION.h"
 #include "SmartSpectrogram_def.h"
 
-Thing_implement (SmartSpectrogram, Function, 0);
+Thing_implement (SmartSpectrogram, Function, 1);
 static constexpr integer maximumValues = 20000000;  // keep import/export usable on Windows 7 x86
 
 void structSmartSpectrogram::v1_info () {
@@ -36,6 +37,7 @@ void structSmartSpectrogram::v1_info () {
 void structSmartSpectrogram::v_shiftX (double from, double to) {
     SmartSpectrogram_Parent::v_shiftX (from, to);
     for (integer i = 1; i <= numberOfFrames; ++ i) NUMshift (& times [i], from, to);
+    for (integer i=1;i<=numberOfFrameIntervals;++i) {NUMshift(&frameStarts[i],from,to);NUMshift(&frameEnds[i],from,to);}
     if (pitch) pitch->v_shiftX (from, to);
     if (intensity) intensity->v_shiftX (from, to);
     if (trajectories) trajectories->v_shiftX (from, to);
@@ -43,6 +45,7 @@ void structSmartSpectrogram::v_shiftX (double from, double to) {
 void structSmartSpectrogram::v_scaleX (double a, double b, double c, double d) {
     SmartSpectrogram_Parent::v_scaleX (a, b, c, d);
     for (integer i = 1; i <= numberOfFrames; ++ i) NUMscale (& times [i], a, b, c, d);
+    for (integer i=1;i<=numberOfFrameIntervals;++i) {NUMscale(&frameStarts[i],a,b,c,d);NUMscale(&frameEnds[i],a,b,c,d);}
     if (pitch) pitch->v_scaleX (a, b, c, d);
     if (intensity) intensity->v_scaleX (a, b, c, d);
     if (trajectories) trajectories->v_scaleX (a, b, c, d);
@@ -69,6 +72,12 @@ autoSmartSpectrogram SmartSpectrogram_create (constVEC times, integer bins, doub
     return me;
 }
 void SmartSpectrogram_validate (SmartSpectrogram me) {
+    Melder_require((my numberOfFrameIntervals==0||my numberOfFrameIntervals==my numberOfFrames)&&
+        my frameStarts.size==my numberOfFrameIntervals&&my frameEnds.size==my numberOfFrameIntervals,U"Invalid frame interval count.");
+    for(integer i=1;i<=my numberOfFrameIntervals;++i)
+        Melder_require(std::isfinite(my frameStarts[i])&&std::isfinite(my frameEnds[i])&&
+            my frameStarts[i]<=my times[i]&&my times[i]<=my frameEnds[i]&&my frameEnds[i]>my frameStarts[i]&&
+            (i==1||my frameStarts[i]>=my frameEnds[i-1]-1e-12),U"Invalid or overlapping frame intervals.");
     Melder_require (my numberOfFrames >= 1 && my numberOfBins >= 2 &&
         my numberOfFrames <= 100000 && my numberOfBins <= maximumValues / my numberOfFrames &&
         my times.size == my numberOfFrames && my valuesDb.nrow == my numberOfBins &&
@@ -84,6 +93,7 @@ void SmartSpectrogram_validate (SmartSpectrogram me) {
             Melder_require (std::isfinite (my valuesDb [row] [col]), U"Spectrum values must be finite dB numbers.");
 }
 double SmartSpectrogram_valueAt (SmartSpectrogram me, double time, double hz) {
+    if(my numberOfFrameIntervals&&!SmartSpectrogram_hasFrameAt(me,time))return undefined;
     if (! std::isfinite (time) || ! std::isfinite (hz) ||
         hz < my firstFrequencyHz || hz > my firstFrequencyHz + (my numberOfBins - 1) * my frequencyStepHz)
         return undefined;
@@ -111,6 +121,35 @@ double SmartSpectrogram_valueAt (SmartSpectrogram me, double time, double hz) {
     return low * (1 - fy) + high * fy;
 }
 
+integer SmartSpectrogram_nearestFrame(SmartSpectrogram me,double time) {
+    Melder_require(std::isfinite(time),U"Time must be finite.");
+    integer left=1,right=my numberOfFrames;
+    while(right-left>1){integer mid=(left+right)/2;if(my times[mid]<=time)left=mid;else right=mid;}
+    return std::abs(time-my times[left])<=std::abs(time-my times[right])?left:right;
+}
+bool SmartSpectrogram_hasFrameAt(SmartSpectrogram me,double time) {
+    return SmartSpectrogram_frameAt(me,time)!=0;
+}
+integer SmartSpectrogram_frameAt(SmartSpectrogram me,double time) {
+    if(!std::isfinite(time))return 0;
+    if(!my numberOfFrameIntervals)return time>=my times[1]&&time<=my times[my numberOfFrames]?SmartSpectrogram_nearestFrame(me,time):0;
+    integer left=1,right=my numberOfFrames;
+    while(left<right){integer mid=(left+right+1)/2;if(my frameStarts[mid]<=time)left=mid;else right=mid-1;}
+    return time>=my frameStarts[left]&&time<=my frameEnds[left]?left:0;
+}
+autoSpectrum SmartSpectrogram_to_Spectrum_nearest(SmartSpectrogram me,double time) {
+    const integer frame=SmartSpectrogram_nearestFrame(me,time);
+    auto result=Spectrum_create(my firstFrequencyHz+(my numberOfBins-1)*my frequencyStepHz,my numberOfBins);
+    result->x1=my firstFrequencyHz;result->dx=my frequencyStepHz;
+    for(integer bin=1;bin<=my numberOfBins;++bin) {
+        // Invert Spectrum::v_getValueAtSample(units=2), retaining the exact dB scale.
+        const double amplitude=std::sqrt(2e-10/my frequencyStepHz)*std::pow(10.0,my valuesDb[bin][frame]/20.0);
+        Melder_require(std::isfinite(amplitude),U"Spectrum amplitude overflow.");
+        result->z[1][bin]=amplitude;
+    }
+    return result;
+}
+
 static std::vector<std::u32string> split (const std::u32string &line, char32 separator) {
     std::vector<std::u32string> fields;
     size_t begin = 0;
@@ -136,6 +175,8 @@ autoSmartSpectrogram SmartSpectrogram_read (MelderFile file) {
     double firstHz = 0, stepHz = 0;
     char32 separator = U',';
     std::vector<double> frameTimes;
+    std::vector<double> starts,ends;
+    bool hasStarts=false,hasEnds=false;
     std::vector<std::vector<double>> rows;
     integer lineNumber = 0;
     for (size_t offset = 0; offset < source.size();) {
@@ -148,7 +189,14 @@ autoSmartSpectrogram SmartSpectrogram_read (MelderFile file) {
         if (line.empty()) continue;
         if (line[0] == U'#') {
             Melder_require (! hasHeader, U"Metadata must precede the time row (line ", lineNumber, U").");
-            if (line == U"# SmartSpectrogram 1") continue;
+            if (line == U"# SmartSpectrogram 1" || line == U"# SmartSpectrogram 2") continue;
+            if(line.rfind(U"# frame_start_s=",0)==0||line.rfind(U"# frame_end_s=",0)==0) {
+                bool start=line.rfind(U"# frame_start_s=",0)==0;
+                bool &seen=start?hasStarts:hasEnds;Melder_require(!seen,U"Duplicate frame intervals.");seen=true;
+                auto values=line.substr(start?16:14);auto fields=split(values,values.find(U'\t')!=values.npos?U'\t':U',');
+                for(auto &field:fields)(start?starts:ends).push_back(number(field,lineNumber));
+                continue;
+            }
             const std::u32string startKey = U"# frequency_start_hz=";
             const std::u32string stepKey = U"# frequency_step_hz=";
             const std::u32string valuesKey = U"# values=";
@@ -188,18 +236,31 @@ autoSmartSpectrogram SmartSpectrogram_read (MelderFile file) {
     auto frameVector = raw_VEC ((integer) frameTimes.size());
     for (integer i = 1; i <= frameVector.size; ++ i) frameVector [i] = frameTimes [i - 1];
     auto me = SmartSpectrogram_create (frameVector.get(), (integer) rows.size(), firstHz, stepHz);
+    Melder_require(hasStarts==hasEnds,U"Specify both frame_start_s and frame_end_s.");
+    if(hasStarts) {
+        Melder_require(starts.size()==frameTimes.size()&&ends.size()==frameTimes.size(),U"Frame intervals must match the time row.");
+        my numberOfFrameIntervals=my numberOfFrames;my frameStarts=raw_VEC(my numberOfFrames);my frameEnds=raw_VEC(my numberOfFrames);
+        for(integer i=1;i<=my numberOfFrames;++i){my frameStarts[i]=starts[i-1];my frameEnds[i]=ends[i-1];}
+        my xmin=my frameStarts[1];my xmax=my frameEnds[my numberOfFrames];
+    }
     for (integer row = 1; row <= my numberOfBins; ++ row)
         for (integer col = 1; col <= my numberOfFrames; ++ col)
             my valuesDb [row] [col] = rows [row - 1] [col - 1];
-    return me;
+    SmartSpectrogram_validate(me.get());return me;
 }
 void SmartSpectrogram_write (SmartSpectrogram me, MelderFile file, bool tsv) {
     SmartSpectrogram_validate (me);
     const char32 sep = tsv ? U'\t' : U',';
-    std::u32string output = U"# SmartSpectrogram 1\n# frequency_start_hz=";
+    std::u32string output = my numberOfFrameIntervals ? U"# SmartSpectrogram 2\n# frequency_start_hz=" : U"# SmartSpectrogram 1\n# frequency_start_hz=";
     output += Melder_double (my firstFrequencyHz);
     output += U"\n# frequency_step_hz=";
     output += Melder_double (my frequencyStepHz);
+    if(my numberOfFrameIntervals) {
+        output+=U"\n# frame_start_s=";
+        for(integer i=1;i<=my numberOfFrames;++i){if(i>1)output+=sep;output+=Melder_double(my frameStarts[i]);}
+        output+=U"\n# frame_end_s=";
+        for(integer i=1;i<=my numberOfFrames;++i){if(i>1)output+=sep;output+=Melder_double(my frameEnds[i]);}
+    }
     output += U"\n# values=db\ntime_s";
     for (integer col = 1; col <= my numberOfFrames; ++ col) {
         output += sep; output += Melder_double (my times [col]);

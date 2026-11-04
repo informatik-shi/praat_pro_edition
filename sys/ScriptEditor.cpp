@@ -1,3 +1,4 @@
+#include "CodeAssist.h"
 /* ScriptEditor.cpp
  *
  * Copyright (C) 1997-2005,2007-2018,2020-2026 Paul Boersma
@@ -425,8 +426,19 @@ static void menu_cb_debugToggle (ScriptEditor me, EDITOR_ARGS) { WinScriptEditor
 static void menu_cb_debugClear (ScriptEditor me, EDITOR_ARGS) { WinScriptEditor_action(me,ScriptIDEAction::Clear); }
 static void menu_cb_debugList (ScriptEditor me, EDITOR_ARGS) { WinScriptEditor_action(me,ScriptIDEAction::List); }
 
+static void assistComplete (ScriptEditor me, EDITOR_ARGS) { CodeAssist_action(my textWidget, 0); }
+static void assistProblems (ScriptEditor me, EDITOR_ARGS) { CodeAssist_action(my textWidget, 1); }
+static void assistParameters (ScriptEditor me, EDITOR_ARGS) { CodeAssist_action(my textWidget, 3); }
+static void assistNext (ScriptEditor me, EDITOR_ARGS) { CodeAssist_action(my textWidget, 2); }
 void structScriptEditor :: v_createMenus () {
 	ScriptEditor_Parent :: v_createMenus ();
+#if defined (_WIN32)
+    Editor_addMenu(this,U"Code",0);
+    Editor_addCommand(this,U"Code",U"Complete (Ctrl+Space)",0,assistComplete);
+    Editor_addCommand(this,U"Code",U"Parameter hints (Ctrl+Shift+Space)",0,assistParameters);
+    Editor_addCommand(this,U"Code",U"Show code problems",0,assistProblems);
+    Editor_addCommand(this,U"Code",U"Next problem",GuiMenu_F4,assistNext);
+#endif
 	if (our wasCreatedInAnEditor()) {
 		Editor_addCommand (this, U"File", U"Add to menu...", 0, menu_cb_addToMenu);
 	} else {

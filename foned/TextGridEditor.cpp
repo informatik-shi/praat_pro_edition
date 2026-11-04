@@ -41,6 +41,8 @@ void structTextGridEditor :: v_createMenuItems_help (EditorMenu menu) {
 	EditorMenu_addCommand (menu, U"About text styles", 0, menu_cb_AboutTextStyles);
 }
 
+#include "shortcuts/TextGridHotkeys.inc"
+
 autoTextGridEditor TextGridEditor_create (conststring32 title, TextGrid textGrid,
 	SampledXY optionalSoundOrLongSound, SpellingChecker spellingChecker, conststring32 callbackSocket)
 {
@@ -62,6 +64,7 @@ autoTextGridEditor TextGridEditor_create (conststring32 title, TextGrid textGrid
 		FunctionEditor_init (me.get(), title, textGrid);
 
 		Melder_assert (isdefined (my startSelection));   // precondition of v_updateText()
+		TextGridHotkeys_install(me.get());
 		my v_updateText ();   // to reflect changed tier selection AND to get first text; BUG: should not be needed
 		if (spellingChecker)
 			GuiText_setSelection (my textArea, 0, 0);

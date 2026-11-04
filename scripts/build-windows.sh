@@ -50,3 +50,21 @@ mkdir -p dist/tutorials/lua-plots
 cp -R docs/tutorials/lua-plots/. dist/tutorials/lua-plots/
 
 cp docs/read-seg-files.md dist/
+
+cp docs/code-assist.md dist/
+cp docs/g1-period-smart-preview.md dist/
+cp scripts/g1-period-smart-preview.praat dist/examples/
+cp scripts/g1-period-smart-preview.praat dist/examples/g1-period-smart-gaussian.praat
+cp docs/g1-period-smart-formants.md dist/
+cp scripts/g1-period-smart-formants.praat dist/examples/
+
+cp docs/theme.md dist/
+if [[ ! -f dist/praat-theme.ini ]]; then cp praat-theme.ini dist/; fi
+cp tests/theme/light.ini dist/praat-theme-light.ini
+cp tests/theme/classic.ini dist/praat-theme-classic.ini
+
+cp docs/spectrogram-s.md dist/
+cp scripts/sample-count-spectrogram-demo.praat dist/examples/
+
+cp docs/annotation-shortcuts.md dist/
+if [[ ! -f dist/praat-textgrid-shortcuts.ini ]]; then cp praat-textgrid-shortcuts.ini dist/; fi

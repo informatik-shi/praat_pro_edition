@@ -1,0 +1,10 @@
+# SmartSpectrogram 2
+# frequency_start_hz=10
+# frequency_step_hz=20
+# values=db
+# frame_start_s=0.0625	0.3125	0.8125
+# frame_end_s=0.1875	0.4375	0.9375
+time_s	0.125	0.375	0.875
+-20	-40	-60
+-30	-50	-70
+-40	-60	-80

@@ -1,3 +1,4 @@
+#include "CodeAssist.h"
 // Praat Custom. GPL-3.0-or-later.
 #include "LuaEditor.h"
 #include "LuaRuntime.h"
@@ -152,8 +153,19 @@ static void debugInto(LuaEditor me,EDITOR_ARGS) {luaDebugAction(me,LuaDebugActio
 static void debugOut(LuaEditor me,EDITOR_ARGS) {luaDebugAction(me,LuaDebugAction::Out);}
 static void debugToggle(LuaEditor me,EDITOR_ARGS) {luaDebugAction(me,LuaDebugAction::Toggle);}
 static void debugClear(LuaEditor me,EDITOR_ARGS) {luaDebugAction(me,LuaDebugAction::Clear);}
+static void assistComplete (LuaEditor me, EDITOR_ARGS) { CodeAssist_action(my textWidget, 0); }
+static void assistProblems (LuaEditor me, EDITOR_ARGS) { CodeAssist_action(my textWidget, 1); }
+static void assistParameters (LuaEditor me, EDITOR_ARGS) { CodeAssist_action(my textWidget, 3); }
+static void assistNext (LuaEditor me, EDITOR_ARGS) { CodeAssist_action(my textWidget, 2); }
 void structLuaEditor :: v_createMenus () {
     LuaEditor_Parent::v_createMenus();
+#if defined (_WIN32)
+    Editor_addMenu(this,U"Code",0);
+    Editor_addCommand(this,U"Code",U"Complete (Ctrl+Space)",0,assistComplete);
+    Editor_addCommand(this,U"Code",U"Parameter hints (Ctrl+Shift+Space)",0,assistParameters);
+    Editor_addCommand(this,U"Code",U"Show code problems",0,assistProblems);
+    Editor_addCommand(this,U"Code",U"Next problem",GuiMenu_F4,assistNext);
+#endif
     Editor_addMenu(this,U"Run",0);
     Editor_addCommand(this,U"Run",U"Run Lua / Continue",GuiMenu_F5,run);
     Editor_addCommand(this,U"Run",U"Run selection",'T',runSelection);

@@ -1,5 +1,8 @@
+#include "theme/Paint.h"
 // Praat Pro Edition. GPL-3.0-or-later.
 #include "ProSoundEditor.h"
+#include "smart/PowerDisplay.h"
+#include "../fon/smart/FrameAccess.h"
 #include "EditorM.h"
 #include "luaplot/PlotHost.h"
 #include <algorithm>
@@ -14,10 +17,11 @@ autoProSoundEditor ProSoundEditor_create (conststring32 title, Sound sound,
     TextGrid textGrid, FrequencyTrajectories trajectories,
     SmartSpectrogram smartSpectrogram, Spectrogram selectedSpectrogram)
 {
-    Melder_require (sound && trajectories, U"Select one Sound and one FrequencyTrajectories object.");
-    FrequencyTrajectories_validate (trajectories);
+    Melder_require (sound && (trajectories || smartSpectrogram || selectedSpectrogram), U"Select Sound and a spectral layer or trajectories.");
+    if (trajectories) FrequencyTrajectories_validate (trajectories);
     if (smartSpectrogram) SmartSpectrogram_validate (smartSpectrogram);
     auto me = Thing_new (ProSoundEditor);
+    if (!trajectories) { my emptyTrajectories=FrequencyTrajectories_create(sound->xmin,sound->xmax,1);trajectories=my emptyTrajectories.get(); }
     my soundArea() = SoundArea_create (true, nullptr, me.get());
     my soundAnalysisArea() = ProSoundAnalysisArea_create (false, nullptr, me.get()).static_cast_move<structSoundAnalysisArea>();
     my overlayArea()->trajectories = trajectories;
@@ -87,10 +91,10 @@ void structProSoundEditor::v_drawLegends () {
         overlay->useSmartSpectrogram && overlay->smartSpectrogram ? U"selected SmartSpectrogram" :
         overlay->selectedSpectrogram ? U"selected Spectrogram" : U"derived spectrogram";
     FunctionArea_drawLegend (overlay,
-        Melder_cat (spectrumLabel, U"; frequency trajectories", selectedLabel), Melder_BLACK,
-        overlay->instancePref_formant_show() ? FunctionArea_legend_SPECKLES U" %%derived formants" : U"", Melder_RED,
-        overlay->instancePref_intensity_show() ? FunctionArea_legend_LINES U" %%derived intensity" : U"", Melder_GREEN,
-        overlay->instancePref_pitch_show() ? FunctionArea_legend_LINES_SPECKLES U" %%derived pitch" : U"", Melder_BLUE);
+        Melder_cat (spectrumLabel, emptyTrajectories ? U"" : U"; frequency trajectories", selectedLabel), Melder_BLACK,
+        overlay->instancePref_formant_show() ? FunctionArea_legend_SPECKLES U" %%derived formants" : U"", Theme_colour("analysis.formants", Melder_RED),
+        overlay->instancePref_intensity_show() ? FunctionArea_legend_LINES U" %%derived intensity" : U"", Theme_colour("analysis.intensity", Melder_GREEN),
+        overlay->instancePref_pitch_show() ? FunctionArea_legend_LINES_SPECKLES U" %%derived pitch" : U"", Theme_colour("analysis.pitch", Melder_BLUE));
 }
 
 bool structProSoundAnalysisArea::v_draw_analysis_spectrogram () {
@@ -112,38 +116,46 @@ bool structProSoundAnalysisArea::v_draw_analysis_spectrogram () {
         const double visibleWidth = std::abs (Graphics_dxWCtoMM (graphics(), right - left)) * resolution / 25.4;
         const double visibleHeight = std::abs (Graphics_dyWCtoMM (graphics(), high - low)) * resolution / 25.4;
         const integer rows = std::min (s->numberOfBins,
-            std::min (160_integer, std::max (2_integer, (integer) std::floor (visibleHeight / 1.5))));
-        const integer columns = std::min (320_integer,
+            std::min (600_integer, std::max (2_integer, (integer) std::floor (visibleHeight))));
+        const integer columns = std::min (1024_integer,
             std::max (2_integer, (integer) std::floor (visibleWidth / 1.5)));
         auto pixels = raw_MAT (rows, columns);
+        std::vector<bool> validColumns ((size_t) columns, false);
         std::vector<double> columnPeaks ((size_t) columns, -1e300);
         double observedPeak = -1e300;
         for (integer col = 1, frame = 1; col <= columns; ++ col) {
             const double time = left + (col - 0.5) * (right - left) / columns;
             while (frame < s->numberOfFrames - 1 && s->times [frame + 1] < time) ++ frame;
-            const integer next = std::min (s->numberOfFrames, frame + 1);
+            integer owner = SmartSpectrogram_frameAt(s,time);
+            if (!owner) continue;
+            validColumns[(size_t)col-1]=true;
+            const bool smooth = smartInterpolateFrames && (!s->numberOfFrameIntervals ||
+                (frame<s->numberOfFrames && s->frameStarts[frame+1]<=s->frameEnds[frame]+1e-12));
+            const integer next = smooth ? std::min (s->numberOfFrames, frame + 1) : owner;
+            if (!smooth) frame=owner;
             const double blend = next == frame ? 0.0 : Melder_clipped (0.0,
                 (time - s->times [frame]) / (s->times [next] - s->times [frame]), 1.0);
             for (integer row = 1; row <= rows; ++ row) {
                 const double hz = low + (row - 0.5) * (high - low) / rows;
-                const double bin = 1.0 + (hz - s->firstFrequencyHz) / s->frequencyStepHz;
-                const integer bin1 = Melder_clipped (1_integer, (integer) std::floor (bin), s->numberOfBins);
-                const integer bin2 = std::min (s->numberOfBins, bin1 + 1);
-                const double fraction = bin - bin1;
-                const double value1 = s->valuesDb [bin1] [frame] * (1.0 - blend) + s->valuesDb [bin1] [next] * blend;
-                const double value2 = s->valuesDb [bin2] [frame] * (1.0 - blend) + s->valuesDb [bin2] [next] * blend;
-                const double value = value1 * (1.0 - fraction) + value2 * fraction +
+                const double bandLow = low + (row - 1.0) * (high - low) / rows;
+                const double bandHigh = low + row * (high - low) / rows;
+                const double value = SmartPowerDisplay::bandPeak (
+                    s->firstFrequencyHz, s->frequencyStepHz, s->numberOfBins, bandLow, bandHigh,
+                    [&](integer bin) { return SmartPowerDisplay::blend (
+                        s->valuesDb [bin] [frame], s->valuesDb [bin] [next], blend); }) +
                     instancePref_spectrogram_preemphasis() * std::log2 (hz / 1000.0 + 1e-308);
                 pixels [row] [col] = value;
                 columnPeaks [(size_t) col - 1] = std::max (columnPeaks [(size_t) col - 1], value);
                 observedPeak = std::max (observedPeak, value);
             }
         }
+        if(observedPeak == -1e300) return true;
         const double peak = instancePref_spectrogram_autoscaling()
             ? observedPeak : instancePref_spectrogram_maximum();
         const double compression = instancePref_spectrogram_dynamicCompression();
         const double floor = peak - instancePref_spectrogram_dynamicRange();
         for (integer col = 1; col <= columns; ++ col) {
+            if(!validColumns[(size_t)col-1]) continue;
             const double adjustment = compression * (peak - columnPeaks [(size_t) col - 1]);
             for (integer row = 1; row <= rows; ++ row) {
                 pixels [row] [col] += adjustment;
@@ -158,12 +170,15 @@ bool structProSoundAnalysisArea::v_draw_analysis_spectrogram () {
             const integer lastRow = std::min (rows, row + 39);
             const double y1 = low + (row - 1.0) * (high - low) / rows;
             const double y2 = low + lastRow * (high - low) / rows;
-            for (integer col = 1; col <= columns; col += 60) {
-                const integer lastCol = std::min (columns, col + 59);
+            for (integer col = 1; col <= columns;) {
+                if(!validColumns[(size_t)col-1]){++col;continue;}
+                integer lastCol=col;
+                while(lastCol<columns&&lastCol<col+59&&validColumns[(size_t)lastCol])++lastCol;
                 const double x1 = left + (col - 1.0) * (right - left) / columns;
                 const double x2 = left + lastCol * (right - left) / columns;
                 auto tile = part_MAT (pixels.get(), row, lastRow, col, lastCol);
                 Graphics_cellArray (graphics(), tile.all(), x1, x2, y1, y2, floor, peak);
+                col=lastCol+1;
             }
         }
     } else if (selectedSpectrogram) {
@@ -185,7 +200,7 @@ void structProSoundAnalysisArea::v_draw_analysis () {
     const MelderColour colours [] = { Melder_MAGENTA, Melder_CYAN, Melder_RED, Melder_BLUE };
     for (integer track = 1; track <= trajectories->numberOfTracks; ++ track) {
         auto tier = trajectories->tracks.at [track];
-        Graphics_setColour (graphics(), colours [(track - 1) % 4]);
+        ThemePaint_set(graphics(), ("trajectory.f" + std::to_string(1 + (track - 1) % 10)).c_str(), colours [(track - 1) % 4]);
         Graphics_setLineWidth (graphics(), track == selectedTrack ? 2.0 : 1.3);
         for (integer point = 1; point <= tier->points.size; ++ point) {
             auto current = tier->points.at [point];
@@ -277,21 +292,32 @@ static void menu_useRegular (ProSoundAnalysisArea me, EDITOR_ARGS) {
     my useSmartSpectrogram = false;
     FunctionEditor_redraw (my functionEditor());
 }
+static void menu_extractSmartSpectrum(ProSoundAnalysisArea me,EDITOR_ARGS) {
+    CONVERT_DATA_TO_ONE
+        const double time=0.5*(my startSelection()+my endSelection());
+        Melder_require(my smartSpectrogram,U"No SmartSpectrogram is attached.");
+        autoSpectrum result=SmartSpectrogram_to_Spectrum_nearest(my smartSpectrogram,time);
+    CONVERT_DATA_TO_ONE_END(Melder_cat(U"smart_period_",Melder_double(my smartSpectrogram->times[
+        SmartSpectrogram_nearestFrame(my smartSpectrogram,0.5*(my startSelection()+my endSelection()))])))
+}
 static void menu_smartDisplaySettings (ProSoundAnalysisArea me, EDITOR_ARGS) {
     EDITOR_FORM (U"Selected SmartSpectrogram display", nullptr)
         REAL (viewFrom, U"View from (Hz)", U"0")
         POSITIVE (viewTo, U"View to (Hz)", U"5000")
         POSITIVE (dynamicRange, U"Dynamic range (dB)", U"70")
+        BOOLEAN(smooth,U"Interpolate between frames",false)
     EDITOR_OK
         SET_REAL (viewFrom, my instancePref_spectrogram_viewFrom())
         SET_REAL (viewTo, my instancePref_spectrogram_viewTo())
         SET_REAL (dynamicRange, my instancePref_spectrogram_dynamicRange())
+        SET_BOOLEAN(smooth,my smartInterpolateFrames)
     EDITOR_DO
         Melder_require (viewFrom >= 0.0 && viewFrom < viewTo && dynamicRange <= 300.0,
             U"Use 0 <= View from < View to and a dynamic range up to 300 dB.");
         my setInstancePref_spectrogram_viewFrom (viewFrom);
         my setInstancePref_spectrogram_viewTo (viewTo);
         my setInstancePref_spectrogram_dynamicRange (dynamicRange);
+        my smartInterpolateFrames=smooth;
         FunctionEditor_redraw (my functionEditor());
     EDITOR_END
 }
@@ -301,6 +327,7 @@ void structProSoundAnalysisArea::v_createMenus () {
     if (smartSpectrogram) {
         FunctionAreaMenu_addCommand (menu, U"Show selected SmartSpectrogram", 0, menu_useSmart, this);
         FunctionAreaMenu_addCommand (menu, U"SmartSpectrogram display settings...", 0, menu_smartDisplaySettings, this);
+        FunctionAreaMenu_addCommand(menu,U"Extract nearest period spectrum",0,menu_extractSmartSpectrum,this);
     }
     if (selectedSpectrogram) FunctionAreaMenu_addCommand (menu, U"Show selected Spectrogram", 0, menu_useRegular, this);
 }

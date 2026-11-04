@@ -1,3 +1,4 @@
+#include "Theme.h"
 /* GuiList.cpp
  *
  * Copyright (C) 1993-2020,2022,2024,2025 Paul Boersma, 2013 Tom Naughton
@@ -232,7 +233,7 @@ GuiList GuiList_create (GuiForm parent, int left, int right, int top, int bottom
 		_GuiObject_setUserData (my d_widget, me.get());
 		my d_widget -> window = CreateWindowEx (0, L"listbox", L"list",
 			WS_CHILD | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | WS_CLIPSIBLINGS |
-			( allowMultipleSelection ? LBS_EXTENDEDSEL : 0 ),
+			( allowMultipleSelection ? LBS_EXTENDEDSEL : 0 ) | (Theme_enabled() ? LBS_OWNERDRAWFIXED | LBS_HASSTRINGS : 0),
 			my d_widget -> x, my d_widget -> y, my d_widget -> width, my d_widget -> height,
 			my d_widget -> parent -> window, nullptr, theGui.instance, nullptr);
 		SetWindowLongPtr (my d_widget -> window, GWLP_USERDATA, (LONG_PTR) my d_widget);

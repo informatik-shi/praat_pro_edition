@@ -1,0 +1,15 @@
+# GUI regression for the real G1 example, standalone and combined editors.
+Read sbl file: "C:/Users/PC/Documents/spbu/corpress/corpress/careva/careva/cta/cta0001-0010/cta0001.sbl"
+sound = selected("Sound")
+Read SmartSpectrogram from CSV/TSV: "../../dist/examples/cta0001-g1-gaussian.tsv"
+smart = selected("SmartSpectrogram")
+plusObject: sound
+View & Edit
+Create FrequencyTrajectories: "display_check", 0, 1.7, 1
+tracks = selected("FrequencyTrajectories")
+Add point: 1, 0.1, 400
+Add point: 1, 1.5, 700
+selectObject: sound
+plusObject: smart
+plusObject: tracks
+View & Edit selected

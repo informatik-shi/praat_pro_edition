@@ -1,3 +1,4 @@
+#include "theme/Paint.h"
 /* SoundArea.cpp
  *
  * Copyright (C) 2022-2026 Paul Boersma, 2007 Erez Volk (FLAC support)
@@ -48,7 +49,7 @@ void structSoundArea :: v1_info () {
 #pragma mark - SoundArea drawing
 
 static void SoundArea_drawCursorFunctionValue (SoundArea me, double yWC, conststring32 yWC_string, conststring32 units) {
-	Graphics_setColour (my graphics(), DataGui_defaultForegroundColour (me, true));
+	ThemePaint_set(my graphics(), "analysis.waveform_selected", DataGui_defaultForegroundColour(me,true));
 	Graphics_line (my graphics(), my startWindow(), yWC, 0.99 * my startWindow() + 0.01 * my endWindow(), yWC);
 	Graphics_fillCircle_mm (my graphics(), 0.5 * (my startSelection() + my endSelection()), yWC, 1.5);
 	Graphics_setTextAlignment (my graphics(), Graphics_RIGHT, Graphics_HALF);
@@ -185,7 +186,7 @@ void SoundArea_draw (SoundArea me) {
 			maximum += 1.0;
 		}
 		Graphics_setWindow (my graphics(), my startWindow(), my endWindow(), minimum, maximum);
-		Graphics_setColour (my graphics(), DataGui_defaultForegroundColour (me, false));
+		ThemePaint_set(my graphics(), "analysis.waveform", DataGui_defaultForegroundColour(me,false));
 		if (horizontal) {
 			Graphics_setTextAlignment (my graphics(), Graphics_RIGHT, Graphics_HALF);
 			const double mid = 0.5 * (minimum + maximum);
@@ -235,7 +236,7 @@ void SoundArea_draw (SoundArea me) {
 		*/
 		if (ichan - my channelOffset < 8 && ichan - my channelOffset < numberOfVisibleChannels) {
 			Graphics_setWindow (my graphics(), 0.0, 1.0, 0.0, 1.0);
-			Graphics_setColour (my graphics(), my editable() ? DataGuiColour_EDITABLE_FRAME : DataGuiColour_NONEDITABLE_FRAME);
+			ThemePaint_set(my graphics(), "analysis.frame", my editable() ? DataGuiColour_EDITABLE_FRAME : DataGuiColour_NONEDITABLE_FRAME);
 			Graphics_line (my graphics(), 0.0, 0.0, 1.0, 0.0);
 		}
 		/*
@@ -245,12 +246,12 @@ void SoundArea_draw (SoundArea me) {
 			Graphics_setWindow (my graphics(), my startWindow(), my endWindow(), minimum, maximum);
 			if (cursorVisible && isdefined (cursorFunctionValue))
 				SoundArea_drawCursorFunctionValue (me, cursorFunctionValue, Melder_graphicalHalf (cursorFunctionValue), U"");
-			Graphics_setColour (my graphics(), DataGui_defaultForegroundColour (me, false));
+			ThemePaint_set(my graphics(), "analysis.waveform", DataGui_defaultForegroundColour(me,false));
 			Graphics_function (my graphics(), & my sound() -> z [ichan] [0], first, last,
 					Sampled_indexToX (my sound(), first), Sampled_indexToX (my sound(), last));
 		} else {
 			Graphics_setWindow (my graphics(), my startWindow(), my endWindow(), minimum * 32768, maximum * 32768);
-			Graphics_setColour (my graphics(), DataGui_defaultForegroundColour (me, false));
+			ThemePaint_set(my graphics(), "analysis.waveform", DataGui_defaultForegroundColour(me,false));
 			Graphics_function16 (my graphics(),
 				my longSound() -> buffer.asArgumentToFunctionThatExpectsZeroBasedArray() - my longSound() -> imin * numberOfChannels + (ichan - 1),
 				numberOfChannels, first, last, Sampled_indexToX (my longSound(), first), Sampled_indexToX (my longSound(), last)

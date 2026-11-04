@@ -22,6 +22,10 @@ Prefs_begin (SoundAnalysisArea)
 	InstancePrefs_addEnum    (SoundAnalysisArea, timeStepStrategy,                1, kSoundAnalysisArea_timeStepStrategy, DEFAULT)
 	InstancePrefs_addDouble  (SoundAnalysisArea, fixedTimeStep,                   1, U"0.01")   // seconds
 	InstancePrefs_addInteger (SoundAnalysisArea, numberOfTimeStepsPerView,        1, U"100")
+    InstancePrefs_addBool    (SoundAnalysisArea, spectrogram_useSamples,          1, false)
+    InstancePrefs_addInteger (SoundAnalysisArea, spectrogram_windowSamples,       1, U"256")
+    InstancePrefs_addInteger (SoundAnalysisArea, spectrogram_hopSamples,          1, U"64")
+    InstancePrefs_addInteger (SoundAnalysisArea, spectrogram_fftSamples,          1, U"0")
 	InstancePrefs_addBool    (SoundAnalysisArea, spectrogram_show,                1, true)
 	InstancePrefs_addDouble  (SoundAnalysisArea, spectrogram_viewFrom,            2, U"0.0")   // Hz
 	InstancePrefs_addDouble  (SoundAnalysisArea, spectrogram_viewTo,              2, U"5000.0")   // Hz

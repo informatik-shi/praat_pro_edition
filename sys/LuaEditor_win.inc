@@ -1,3 +1,4 @@
+#include "Theme.h"
 // Windows code view. Included in LuaEditor.cpp to keep platform details private.
 #if defined (_WIN32)
 #include <richole.h>
@@ -79,26 +80,26 @@ struct LuaView {
                     std::wstring closing=L"]"+std::wstring(j-i-1,L'=')+L"]";
                     size_t end=s.find(closing,j+1);
                     i=end==std::wstring::npos?s.size():end+closing.size();
-                    spans.push_back({(long)start,(long)i,comment?RGB(55,120,65):RGB(155,55,37)});continue;
+                    spans.push_back({(long)start,(long)i,comment?Theme_nativeColour("syntax.comment", RGB(55,120,65)):Theme_nativeColour("syntax.string", RGB(155,55,37))});continue;
                 }
             }
             if(comment) {
                 while(i<s.size()&&s[i]!=L'\r'&&s[i]!=L'\n')++i;
-                spans.push_back({(long)start,(long)i,RGB(55,120,65)});continue;
+                spans.push_back({(long)start,(long)i,Theme_nativeColour("syntax.comment", RGB(55,120,65))});continue;
             }
             i=open;
             if(s[i]==L'\'' || s[i]==L'"') {
                 wchar_t quote=s[i++];
                 while(i<s.size()) {if(s[i]==L'\\'){i=std::min(i+2,s.size());continue;} if(s[i++]==quote)break;}
-                spans.push_back({(long)start,(long)i,RGB(155,55,37)});
+                spans.push_back({(long)start,(long)i,Theme_nativeColour("syntax.string", RGB(155,55,37))});
             } else if(luaAlpha(s[i]) || s[i]==L'_') {
                 while(i<s.size()&&(luaAlnum(s[i])||s[i]==L'_'))++i;
                 auto word=s.substr(start,i-start);
-                if(keywords.count(word))spans.push_back({(long)start,(long)i,RGB(28,69,179)});
-                else if(word==L"praat" || word==L"print")spans.push_back({(long)start,(long)i,RGB(0,110,130)});
+                if(keywords.count(word))spans.push_back({(long)start,(long)i,Theme_nativeColour("syntax.keyword", RGB(28,69,179))});
+                else if(word==L"praat" || word==L"print")spans.push_back({(long)start,(long)i,Theme_nativeColour("syntax.function", RGB(0,110,130))});
             } else if(luaDigit(s[i])) {
                 while(i<s.size()&&(luaAlnum(s[i])||s[i]==L'.'))++i;
-                spans.push_back({(long)start,(long)i,RGB(125,55,150)});
+                spans.push_back({(long)start,(long)i,Theme_nativeColour("syntax.number", RGB(125,55,150))});
             } else ++i;
         }
     }
@@ -134,11 +135,11 @@ struct LuaView {
         auto modified=SendMessageW(text,EM_GETMODIFY,0,0),mask=SendMessageW(text,EM_SETEVENTMASK,0,0);
         document->Undo(tomSuspend,nullptr);SendMessageW(text,WM_SETREDRAW,FALSE,0);
         auto background=[&](long a,long b,COLORREF colour){if(b<=a)return;CHARRANGE range{a,b};SendMessageW(text,EM_EXSETSEL,0,(LPARAM)&range);CHARFORMAT2W f{};f.cbSize=sizeof(f);f.dwMask=CFM_BACKCOLOR;f.crBackColor=colour;SendMessageW(text,EM_SETCHARFORMAT,SCF_SELECTION,(LPARAM)&f);};
-        background(start,last,RGB(255,255,255));
+        background(start,last,Theme_nativeColour("editor.background", RGB(255,255,255)));
         if((debug.state==LuaDebugState::Paused||debug.state==LuaDebugState::Error)&&debug.line>0) {
-            long a=CodeFolding_lineStart(editor->textWidget,debug.line-1);if(a>=0)background(a,a+(long)CodeFolding_lineText(editor->textWidget,debug.line-1).size(),RGB(255,239,167));
+            long a=CodeFolding_lineStart(editor->textWidget,debug.line-1);if(a>=0)background(a,a+(long)CodeFolding_lineText(editor->textWidget,debug.line-1).size(),Theme_nativeColour("editor.execution", RGB(255,239,167)));
         }
-        colour(start,last,RGB(32,35,40));
+        colour(start,last,Theme_nativeColour("editor.text", RGB(32,35,40)));
         for(auto &span:spans)if(span.end>start&&span.start<last)colour(std::max(start,span.start),std::min(last,span.end),span.colour);
         SendMessageW(text,EM_EXSETSEL,0,(LPARAM)&selection);SendMessageW(text,EM_SETSCROLLPOS,0,(LPARAM)&scroll);
         SendMessageW(text,EM_SETMODIFY,modified,0);SendMessageW(text,EM_SETEVENTMASK,0,mask);
@@ -155,7 +156,7 @@ LRESULT CALLBACK luaGutter(HWND window,UINT message,WPARAM wp,LPARAM lp,UINT_PTR
     }
     if(message==WM_PAINT) {
         PAINTSTRUCT paint;HDC dc=BeginPaint(window,&paint);RECT r;GetClientRect(window,&r);
-        FillRect(dc,&r,(HBRUSH)(COLOR_BTNFACE+1));SetBkMode(dc,TRANSPARENT);SetTextColor(dc,RGB(105,110,120));
+        HBRUSH gutterBrush=CreateSolidBrush(Theme_nativeColour("editor.gutter",GetSysColor(COLOR_BTNFACE)));FillRect(dc,&r,gutterBrush);DeleteObject(gutterBrush);SetBkMode(dc,TRANSPARENT);SetTextColor(dc,Theme_nativeColour("editor.line_number", RGB(105,110,120)));
         auto old=SelectObject(dc,(HFONT)SendMessageW(self->text,WM_GETFONT,0,0));
         long first=CodeFolding_firstVisible(self->editor->textWidget);
         long count=CodeFolding_lineCount(self->editor->textWidget);
@@ -164,7 +165,7 @@ LRESULT CALLBACK luaGutter(HWND window,UINT message,WPARAM wp,LPARAM lp,UINT_PTR
             long index=CodeFolding_lineStart(self->editor->textWidget,line);POINTL pos;
             SendMessageW(self->text,EM_POSFROMCHAR,(WPARAM)&pos,index);if(pos.y>r.bottom)break;
             std::wstring label=std::to_wstring(line+1);RECT row{24,pos.y,64,pos.y+24};DrawTextW(dc,label.c_str(),-1,&row,DT_RIGHT|DT_SINGLELINE|DT_NOPREFIX);
-            if(self->debug.breakpoints.count(line+1)){HBRUSH brush=CreateSolidBrush(RGB(190,45,50));auto prev=SelectObject(dc,brush);Ellipse(dc,3,pos.y+2,15,pos.y+14);SelectObject(dc,prev);DeleteObject(brush);}
+            if(self->debug.breakpoints.count(line+1)){HBRUSH brush=CreateSolidBrush(Theme_nativeColour("editor.breakpoint", RGB(190,45,50)));auto prev=SelectObject(dc,brush);Ellipse(dc,3,pos.y+2,15,pos.y+14);SelectObject(dc,prev);DeleteObject(brush);}
             if(self->debug.line==line+1&&(self->debug.state==LuaDebugState::Paused||self->debug.state==LuaDebugState::Error)){MoveToEx(dc,16,pos.y+2,nullptr);LineTo(dc,22,pos.y+8);LineTo(dc,16,pos.y+14);}
         }
         SelectObject(dc,old);EndPaint(window,&paint);return 0;
@@ -194,6 +195,7 @@ LRESULT CALLBACK luaPanelProc(HWND window,UINT message,WPARAM wp,LPARAM lp,UINT_
 }
 static void createLuaView(LuaEditor editor) {
     auto self=new LuaView;self->editor=editor;self->text=editor->textWidget->d_widget->window;
+    SendMessageW(self->text,EM_SETBKGNDCOLOR,0,Theme_nativeColour("editor.background",RGB(255,255,255)));
     self->host=GetParent(self->text);
     luaViews[editor]=self;
     IUnknown *unknown=nullptr;SendMessageW(self->text,EM_GETOLEINTERFACE,0,(LPARAM)&unknown);
@@ -212,9 +214,10 @@ static void createLuaView(LuaEditor editor) {
     for(HWND control:{self->view,self->status,self->tabs[0],self->tabs[1],self->tabs[2],self->buttons[0],self->buttons[1],self->buttons[2],self->buttons[3],self->buttons[4]})SendMessageW(control,WM_SETFONT,font,TRUE);
     SetWindowSubclass(self->gutter,luaGutter,775,(DWORD_PTR)self);SetWindowSubclass(self->text,luaTextProc,775,(DWORD_PTR)self);
     SetTimer(self->text,775,180,nullptr);
-    CodeFolding_install(editor->textWidget,72,true);self->layout();self->showDebug();
+    CodeFolding_install(editor->textWidget,72,true);CodeAssist_install(editor->textWidget,true);self->layout();self->showDebug();
 }
 static void destroyLuaView(LuaEditor editor) {
+    CodeAssist_destroy(editor->textWidget);
     CodeFolding_destroy(editor->textWidget);
     auto it=luaViews.find(editor);if(it==luaViews.end())return;auto self=it->second;
     KillTimer(self->text,775);RemoveWindowSubclass(self->text,luaTextProc,775);DestroyWindow(self->gutter);
