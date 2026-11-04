@@ -1,5 +1,7 @@
 # Praat: doing phonetics by computer
 
+[Linux/macOS packages and build instructions](docs/platform-builds.md).
+
 Custom Windows build: [combined Sound editor](docs/combined-editor.md), [Pro menu and SBL import](docs/pro-menu.md), [Read seg files](docs/read-seg-files.md), [Lua Editor and API](docs/lua.md),
 [SmartSpectrogram](docs/smart-spectrogram.md),
 [разметка и свои горячие клавиши](docs/annotation-shortcuts.md),

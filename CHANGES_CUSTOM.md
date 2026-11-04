@@ -1,5 +1,10 @@
 # Changes relative to Praat 7.0.02
 
+- Linux GTK and macOS universal packaging scripts, custom-source Xcode project
+  preparation, functional checks, and a dedicated platform-build workflow.
+  Direct Lua CLI execution also works when all streams are redirected.
+  Windows-only interface extensions are listed in docs/platform-builds.md.
+
 - Windows TextGrid/Sound annotation editors have a searchable Keyboard shortcuts
   window with assignment, conflict checks, disable/default, and live reload.
   Settings persist separately in praat-textgrid-shortcuts.ini and apply across

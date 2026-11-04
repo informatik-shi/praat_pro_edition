@@ -1646,11 +1646,15 @@ static void interpretCommandLineArguments (bool weWereStartedFromTheCommandLine,
 		MelderInfo_close ();
 		exit (-1);
 	}
+    // Lua files remain runnable in pipes/CI, where isatty() is false for every stream.
+    // Explicit --open/--send still take precedence.
+    const bool luaFileArgument = thereIsAFileNameInTheArgumentList &&
+        Melder_endsWith_caseAware(Melder_peek8to32_u(argv[praatP.argumentNumber]), U".lua");
 	Melder_batch =
 		! praatP.foundTheOpenSwitch &&
 		! praatP.foundTheSendSwitch &&
 		! praatP.foundTheSendOrFormSwitch &&
-		(praatP.foundTheRunSwitch || thereIsAFileNameInTheArgumentList && weWereStartedFromTheCommandLine)   // this line to be removed
+		(praatP.foundTheRunSwitch || thereIsAFileNameInTheArgumentList && (weWereStartedFromTheCommandLine || luaFileArgument))
 	;
 	bool userWantsGui = ! Melder_batch;
 	praatP.fileNamesCameInByDropping =

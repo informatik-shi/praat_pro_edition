@@ -14,7 +14,7 @@ import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 parser = argparse.ArgumentParser()
-parser.add_argument("action", choices=("access", "dispatch", "status", "logs", "download"))
+parser.add_argument("action", choices=("access", "dispatch", "status", "logs", "download", "cancel"))
 parser.add_argument("--repo", default="informatik-shi/praat_pro_edition")
 parser.add_argument("--ref", default="build/macos-linux")
 parser.add_argument("--run", type=int)
@@ -65,14 +65,19 @@ elif args.action == "status":
         runs = [request(base + f"/actions/runs/{args.run}")]
     else:
         query = urllib.parse.urlencode({"branch": args.ref, "per_page": 5})
-        runs = [r for r in request(base + "/actions/runs?" + query)["workflow_runs"] if r.get("path") == ".github/workflows/platform-builds.yml"]
+        runs = request(base + "/actions/runs?" + query)["workflow_runs"]
+        if not runs: print("No Actions runs found for this branch yet.")
     for run in runs:
-        print(json.dumps({k: run[k] for k in ("id", "html_url", "status", "conclusion", "head_sha")}))
+        print(json.dumps({k: run[k] for k in ("id", "name", "path", "html_url", "status", "conclusion", "head_sha")}))
         if args.run:
             jobs = request(base + f"/actions/runs/{args.run}/jobs")["jobs"]
             for job in jobs:
                 print(json.dumps({"job": job["name"], "status": job["status"], "conclusion": job["conclusion"],
                     "steps": [{k: step.get(k) for k in ("name", "status", "conclusion")} for step in job["steps"]]}))
+elif args.action == "cancel":
+    if not args.run: raise SystemExit("--run required")
+    request(base + f"/actions/runs/{args.run}/cancel", {})
+    print(f"Cancelled superseded platform build {args.run}")
 elif args.action == "logs":
     if not args.run: raise SystemExit("--run required")
     target = cache / f"github-{args.run}-logs.zip"

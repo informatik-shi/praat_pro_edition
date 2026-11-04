@@ -108,7 +108,7 @@ LRESULT CALLBACK themed(HWND w,UINT msg,WPARAM wp,LPARAM lp,UINT_PTR,DWORD_PTR){
     }
     if(msg==WM_SHOWWINDOW)title(w);
     if(msg==WM_SHOWWINDOW||msg==WM_INITMENU||msg==WM_NCPAINT){prepareMenu(GetMenu(w),true);
-        
+
         if(className(w).find(L"RICHEDIT")!=std::wstring::npos){SendMessageW(w,EM_SETBKGNDCOLOR,0,colour("editor.background"));}}
     if(msg==WM_INITMENUPOPUP)prepareMenu((HMENU)wp);
     if(msg==WM_MENUCHAR){
