@@ -19,7 +19,10 @@ paths = subprocess.check_output(
 count = 0
 with tarfile.open(output, "w:gz", compresslevel=3) as archive:
     for name in sorted(set(paths)):
-        if not name or pathlib.PurePosixPath(name).parts[0] in {".git", ".codex", ".agents", ".aws", ".local-build", "dist"}:
+        if not name:
+            continue
+        first = pathlib.PurePosixPath(name).parts[0]
+        if first == "dist" or (first.startswith(".") and first != ".github"):
             continue
         path = root / name
         if not path.is_file() or path.resolve() == output or path.suffix.lower() in {".o", ".a", ".exe", ".dmp"}:

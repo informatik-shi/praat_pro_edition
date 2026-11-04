@@ -1,5 +1,58 @@
 # Журнал проекта
 
+## 2026-11-04 — сборки Linux и macOS
+
+1. Проверены Makefile, официальный проект Xcode Praat 7.0.02 и платформенные
+   условия наших доработок. Linux собирается штатными Makefile с включением
+   всех кастомных исходников. Для macOS добавлена подготовка официального
+   Xcode-проекта: pinned архив с SHA-256
+   db518760d2dd78c98da68e380d721bedb4825ee63eb8da37f0a3be813fabef5b,
+   58 дополнительных единиц компиляции (новые объекты/редакторы и Lua/LFS).
+   Lua компилируется как C++, GUI-части — Objective-C++.
+2. Установленный Docker Desktop не запустился (ошибка собственного Inference
+   manager). Сброс или изменение настроек Docker не выполнялись. Создана
+   отдельная WSL2-среда PraatBuildLinux в .local-build/platforms/wsl-ubuntu
+   из официального Ubuntu Base 22.04.5. SHA-256 образа проверен:
+   242cd8898b33ea806ef5f13b1076ed7c76f9f989d18384452f7166692438ff1a.
+   Внутри установлены GCC 11.4, GTK3 и аудиобиблиотеки; Windows .o/.a не
+   использовались. Исходники текущего рабочего дерева перенесены архивом.
+3. Первая Linux-компиляция — PASS. Обнаружено, что без TTY прямой запуск Lua
+   принимался за открытие файла данных. Исправлена интерпретация аргумента
+   .lua в sys/praat.cpp; --open/--send имеют прежний приоритет. После этого
+   scripts/build-linux.sh завершился: SpectrogramS, SmartSpectrogram,
+   FrequencyTrajectories, SEG, Lua/API, CLI с --run и без него, Lua plotting
+   — PASS. GTK-тест Sound/SpectrogramS также PASS (Xvfb, GDK_BACKEND=x11,
+   отдельный дисплей, без маршрутизации в WSLg). Сохранён кадр linux-gui.png;
+   визуально проверены осциллограмма и спектрограмма. Минимальный образ
+   сообщил о недостающем SVG-loader; в инструкции/CI добавлены GUI-ресурсы.
+4. Готовый локальный пакет: dist/praat-pro-linux-x86_64.tar.gz, 63689395 байт,
+   SHA-256 b53a65868dacc4220a65b0adb22752b478e0da8c390bb8f6afa6e77a5e6c2810.
+   Это GTK-приложение, x86-64 baseline, glibc >= 2.35. Внутри — исполняемый
+   файл, зависимости, инструкции, лицензии и примеры. Windows EXE сохранены.
+5. Пользователь отдельно разрешил отправку текущей кастомной версии вместе
+   с накопленными локальными изменениями в ветку build/macos-linux и запуск
+   GitHub Actions. Ветка создана от develop и отправлена в origin; develop
+   не передвигалась. Коммиты: 7faafae1d (платформы и ранее выполненные
+   кастомные доработки), f2053f4d0 (CLI Lua и нормализация переносов),
+   1825616b0/e59ae7abb (отдельные платформенные задания, выбор Mac-хоста,
+   изолированная GTK-проверка). CI Linux от f2053f4d0 прошёл все тесты,
+   архив скачан в .local-build/platforms и проверен как пакет ELF64.
+6. Mac-сценарий создаёт universal arm64+x86_64 .app, проверяет lipo,
+   выполняет функциональные тесты, ставит ad-hoc подпись и упаковывает ZIP/DMG.
+   Developer ID и нотариализация не настроены. Локальной macOS здесь нет.
+   Запуски на macos-15/macOS-15-intel ожидали runner; устаревшие задания
+   были отменены. Текущий Mac-запуск:
+   https://github.com/informatik-shi/praat_pro_edition/actions/runs/41863701835
+   (macos-26, исходники e59ae7abb). На момент этой записи сервер ещё не
+   выделен, шагов компиляции нет. Готовая Mac-сборка пока не подтверждена.
+7. Новые файлы: scripts/build-linux.sh, build-macos.sh, scripts/platforms/*,
+   .github/workflows/platform-builds.yml, docs/platform-builds.md. Проверены
+   Python/Bash-синтаксис, ссылки/уникальность Xcode source IDs, git diff --check.
+   Прежние Windows-only функции (тема/INI, кодовое дополнение/folding,
+   панели debugger, Stop, горячие клавиши TextGrid) не выдаются за портированные:
+   различия явно описаны в руководстве. Собственные объекты, Lua API и графики
+   включаются в платформенные сборки.
+
 ## 2026-10-18 — ручная разметка Sound + TextGrid и горячие клавиши INI
 
 1. За основу взят штатный TextGridEditor: Sound + TextGrid → View & Edit

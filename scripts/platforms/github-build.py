@@ -8,13 +8,14 @@ import os
 import pathlib
 import re
 import subprocess
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 parser = argparse.ArgumentParser()
-parser.add_argument("action", choices=("access", "dispatch", "status", "logs", "download", "cancel"))
+parser.add_argument("action", choices=("access", "dispatch", "status", "logs", "download", "cancel", "diagnose"))
 parser.add_argument("--repo", default="informatik-shi/praat_pro_edition")
 parser.add_argument("--ref", default="build/macos-linux")
 parser.add_argument("--run", type=int)
@@ -40,6 +41,8 @@ class Redirect(urllib.request.HTTPRedirectHandler):
 
 opener = urllib.request.build_opener(Redirect())
 def request(path, data=None, binary=False):
+    if data is None and not binary:
+        path += ("&" if "?" in path else "?") + "_build_check=" + str(time.time_ns())
     req = urllib.request.Request("https://api.github.com/" + path,
         data=json.dumps(data).encode() if data is not None else None,
         headers={"Authorization": "Bearer " + token, "Accept": "application/vnd.github+json",
@@ -58,7 +61,7 @@ cache = ROOT / ".local-build/platforms"
 cache.mkdir(parents=True, exist_ok=True)
 if args.action == "access":
     repo = request(base)
-    print(json.dumps({"repository": repo["full_name"], "permissions": repo.get("permissions", {})}))
+    print(json.dumps({"repository": repo["full_name"], "private": repo["private"], "default_branch": repo["default_branch"], "permissions": repo.get("permissions", {})}))
 elif args.action == "dispatch":
     request(base + "/actions/workflows/platform-builds.yml/dispatches", {"ref": args.ref, "inputs": {"platform": args.platform, "macos_runner": args.macos_runner}})
     print(f"Platform build requested for {args.repo} at {args.ref}")
@@ -76,6 +79,12 @@ elif args.action == "status":
             for job in jobs:
                 print(json.dumps({"job": job["name"], "status": job["status"], "conclusion": job["conclusion"], "labels": job.get("labels"), "runner": job.get("runner_name"), "started_at": job.get("started_at"),
                     "steps": [{k: step.get(k) for k in ("name", "status", "conclusion")} for step in job["steps"]]}))
+elif args.action == "diagnose":
+    if not args.run: raise SystemExit("--run required")
+    run=request(base+f"/actions/runs/{args.run}")
+    for job in request(base+f"/actions/runs/{args.run}/jobs")["jobs"]:
+        check=request(urllib.parse.urlparse(job["check_run_url"]).path.lstrip("/"))
+        print(json.dumps({"job":job["name"],"status":check["status"],"conclusion":check["conclusion"],"output":check.get("output")}))
 elif args.action == "cancel":
     if not args.run: raise SystemExit("--run required")
     request(base + f"/actions/runs/{args.run}/cancel", {})
