@@ -26,7 +26,7 @@ GTK 3, ALSA/PulseAudio/JACK. Требуется glibc 2.35 или новее и 
 ```sh
 sudo apt-get update
 sudo apt-get install build-essential pkg-config libgtk-3-dev libasound2-dev \
-  libpulse-dev libjack-jackd2-dev xvfb xauth
+  libpulse-dev libjack-jackd2-dev xvfb xauth librsvg2-common shared-mime-info fonts-dejavu-core
 JOBS=4 bash scripts/build-linux.sh
 ```
 
@@ -79,7 +79,8 @@ JOBS=4 bash scripts/build-macos.sh
 `build/macos-linux`, а после регистрации задания также вручную через
 **Actions → Praat Pro macOS and Linux packages → Run workflow**. Он собирает
 Ubuntu x86-64 и macOS universal, запускает тесты и сохраняет пакеты и логи
-как артефакты. Автоматической публикации релиза, отправки коммитов или
+как артефакты. Можно выбрать `all`, `linux` или `macos` для отдельной
+сборки платформы. Автоматической публикации релиза, отправки коммитов или
 изменения ветки `develop` в задании нет.
 
 GitHub собирает только код из выбранной ветки. Перед запуском необходимо

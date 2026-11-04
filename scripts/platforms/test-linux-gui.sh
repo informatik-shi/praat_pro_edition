@@ -9,7 +9,8 @@ if [[ "${3:-}" != inside ]]; then
     exec xvfb-run -a -s "-screen 0 1280x900x24 -fbdir $root/.local-build/linux-gui-fb" \
         bash "$0" "$root" "$output" inside
 fi
-unset DBUS_SESSION_BUS_ADDRESS
+unset DBUS_SESSION_BUS_ADDRESS WAYLAND_DISPLAY
+export GDK_BACKEND=x11
 ./praat-pro --utf8 --new-send --no-pref-files --no-plugins --FULL-TRUST tests/spectrogram-s/gui.praat > .local-build/linux-gui.log 2>&1 &
 app=$!
 trap 'kill "$app" 2>/dev/null || true' EXIT

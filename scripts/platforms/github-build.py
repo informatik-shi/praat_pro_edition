@@ -19,6 +19,7 @@ parser.add_argument("--repo", default="informatik-shi/praat_pro_edition")
 parser.add_argument("--ref", default="build/macos-linux")
 parser.add_argument("--run", type=int)
 parser.add_argument("--platform", choices=("all", "linux", "macos"), default="all")
+parser.add_argument("--macos-runner", choices=("macos-26", "macos-15-intel", "macos-15"), default="macos-26")
 args = parser.parse_args()
 if not re.fullmatch(r"[\w.-]+/[\w.-]+", args.repo):
     raise SystemExit("Invalid repository name")
@@ -42,7 +43,7 @@ def request(path, data=None, binary=False):
     req = urllib.request.Request("https://api.github.com/" + path,
         data=json.dumps(data).encode() if data is not None else None,
         headers={"Authorization": "Bearer " + token, "Accept": "application/vnd.github+json",
-                 "User-Agent": "Praat-Pro-platform-build", "Content-Type": "application/json"})
+                 "User-Agent": "Praat-Pro-platform-build", "Content-Type": "application/json", "Cache-Control": "no-cache"})
     try:
         with opener.open(req, timeout=120) as response:
             raw = response.read()
@@ -59,7 +60,7 @@ if args.action == "access":
     repo = request(base)
     print(json.dumps({"repository": repo["full_name"], "permissions": repo.get("permissions", {})}))
 elif args.action == "dispatch":
-    request(base + "/actions/workflows/platform-builds.yml/dispatches", {"ref": args.ref, "inputs": {"platform": args.platform}})
+    request(base + "/actions/workflows/platform-builds.yml/dispatches", {"ref": args.ref, "inputs": {"platform": args.platform, "macos_runner": args.macos_runner}})
     print(f"Platform build requested for {args.repo} at {args.ref}")
 elif args.action == "status":
     if args.run:
@@ -73,7 +74,7 @@ elif args.action == "status":
         if args.run:
             jobs = request(base + f"/actions/runs/{args.run}/jobs")["jobs"]
             for job in jobs:
-                print(json.dumps({"job": job["name"], "status": job["status"], "conclusion": job["conclusion"],
+                print(json.dumps({"job": job["name"], "status": job["status"], "conclusion": job["conclusion"], "labels": job.get("labels"), "runner": job.get("runner_name"), "started_at": job.get("started_at"),
                     "steps": [{k: step.get(k) for k in ("name", "status", "conclusion")} for step in job["steps"]]}))
 elif args.action == "cancel":
     if not args.run: raise SystemExit("--run required")
