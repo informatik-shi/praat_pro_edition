@@ -5,6 +5,10 @@ Ubuntu 24.04 (proot-distro), а окна выводит через Termux:X11.
 Root на планшете не требуется. Это не APK и не бинарный файл для запуска
 непосредственно в Android/Bionic. Ветка разработки: `build/termux-tablet`.
 
+Сборка от 5 ноября 2026 года готова: [ARM64-проверка и пакеты](https://github.com/informatik-shi/praat_pro_edition/actions/runs/42093675179).
+Пройдены функциональные тесты и по 19 окон при `1280×800` и `800×1280`;
+снимки проверены. На физическом Galaxy Tab S9 FE эта версия пока не запускалась.
+
 ## Установка на планшет
 
 1. Установите актуальный Termux из [F-Droid](https://f-droid.org/packages/com.termux/)
