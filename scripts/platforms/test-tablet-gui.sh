@@ -22,6 +22,9 @@ if [[ "${4:-}" != inside ]]; then
 fi
 unset WAYLAND_DISPLAY
 export GDK_BACKEND=x11 PRAAT_TABLET=1 GDK_SCALE=1 GDK_DPI_SCALE=1
+export XDG_RUNTIME_DIR="$output/runtime"
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 700 "$XDG_RUNTIME_DIR"
 openbox >"$output/openbox.log" 2>&1 &
 wm=$!
 app=

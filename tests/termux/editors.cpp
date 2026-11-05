@@ -20,8 +20,9 @@ int main (int argc, char **argv) {
             PRAAT_YEAR, PRAAT_MONTH, PRAAT_DAY, U"", U"", argc, argv);
         INCLUDE_LIBRARY (praat_uvafon_init)
         auto lua = LuaEditor_create ();
-        GuiShell_setTitle (lua -> windowForm, U"tablet_lua_editor");
         GuiText_setString (lua -> textWidget, U"local x = 1\nprint(x)\n-- Проверка UTF-8\n");
+        lua -> dirty = false;
+        GuiShell_setTitle (lua -> windowForm, U"tablet_lua_editor");
         lua.releaseToUser ();
         auto script = ScriptEditor_createFromText (nullptr, U"writeInfoLine: \"Проверка UTF-8\"\n");
         GuiShell_setTitle (script -> windowForm, U"tablet_praat_editor");

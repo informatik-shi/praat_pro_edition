@@ -396,7 +396,9 @@ GuiMenu GuiMenu_createInWindow (GuiWindow window, conststring32 title, uint32 fl
 		Melder_assert (window);
 		trace (U"create and show the menu title");
 		my d_gtkMenuTitle = (GtkMenuItem *) gtk_menu_item_new_with_label (Melder_peek32to8 (title));
-		gtk_menu_shell_append (GTK_MENU_SHELL (window -> d_gtkMenuBar), GTK_WIDGET (my d_gtkMenuTitle));
+		GtkWidget *tabletMenu = (GtkWidget *) g_object_get_data (G_OBJECT (window -> d_gtkMenuBar), "tablet-menu");
+		gtk_menu_shell_append (GTK_MENU_SHELL (tabletMenu ? tabletMenu : GTK_WIDGET (window -> d_gtkMenuBar)),
+			GTK_WIDGET (my d_gtkMenuTitle));
 		if (flags & GuiMenu_INSENSITIVE)
 			gtk_widget_set_sensitive (GTK_WIDGET (my d_gtkMenuTitle), false);
 		gtk_widget_show (GTK_WIDGET (my d_gtkMenuTitle));

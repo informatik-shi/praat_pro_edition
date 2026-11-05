@@ -220,6 +220,16 @@ void GuiWindow_addMenuBar (GuiWindow me) {
 	#if gtk
 		my d_gtkMenuBar = (GtkMenuBar *) gtk_menu_bar_new ();
 		_GuiObject_setUserData (my d_gtkMenuBar, me);
+		int tabletWidth, tabletHeight;
+		if (_GuiGtk_getTabletSize (& tabletWidth, & tabletHeight)) {
+			// Keep every editor menu reachable even on a portrait tablet display.
+			GtkWidget *entry = gtk_menu_item_new_with_label ("Menu");
+			GtkWidget *menu = gtk_menu_new ();
+			gtk_menu_item_set_submenu (GTK_MENU_ITEM (entry), menu);
+			gtk_menu_shell_append (GTK_MENU_SHELL (my d_gtkMenuBar), entry);
+			g_object_set_data (G_OBJECT (my d_gtkMenuBar), "tablet-menu", menu);
+			gtk_widget_show (entry);
+		}
 		my v_positionInForm (my d_gtkMenuBar, 0, 0, Machine_getMenuBarTop (), Machine_getMenuBarBottom (), me);   // BUG?
 
 		// we need an accelerator group for each window we're creating accelerated menus on

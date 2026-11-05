@@ -73,6 +73,8 @@ proot-distro login praat-pro -- /opt/praat-pro/praat-pro --run /sdcard/Download/
 - ограничивает начальный размер редакторов рабочей областью экрана;
 - добавляет горизонтальную и вертикальную прокрутку большим диалогам,
   сохраняя поля и кнопки в исходном размере;
+- собирает категории строки меню под кнопкой Menu, чтобы правые пункты
+  не обрезались в портретной ориентации;
 - корректно скрывает и повторно открывает диалоги с прокруткой.
 
 Изменения размера применяются при создании окна. После смены разрешения
@@ -131,7 +133,7 @@ Termux:X11 на нём. Снимки и `windows.json` публикуются о
 
 ```sh
 apt-get update
-apt-get install -y build-essential pkg-config libgtk-3-dev libasound2-dev libpulse-dev libjack-jackd2-dev xvfb xauth x11-apps x11-utils xdotool openbox wmctrl dbus-x11 librsvg2-common shared-mime-info fonts-dejavu-core python3-pil
+apt-get install -y build-essential pkg-config libgtk-3-dev libasound2-dev libpulse-dev libjack-jackd2-dev xvfb xauth x11-apps x11-utils xdotool scrot openbox wmctrl dbus-x11 librsvg2-common shared-mime-info fonts-dejavu-core python3-pil
 JOBS=4 bash scripts/build-termux.sh
 ```
 

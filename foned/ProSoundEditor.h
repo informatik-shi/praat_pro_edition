@@ -13,6 +13,7 @@ Thing_define (ProTextGridArea, TextGridArea) {
         return FunctionEditor_defaultMouseInWideDataView (functionEditor(), event, x);
     }
     void v_createMenus () override { }
+    void v_updateMenuItems () override { }
     void v_createMenuItems_edit (EditorMenu) override { }
     void v_createMenuItems_save (EditorMenu) override { }
 };
