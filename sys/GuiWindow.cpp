@@ -134,6 +134,14 @@ GuiWindow GuiWindow_create (int x, int y, int width, int height, int minimumWidt
 		(void) flags;
 		GuiGtk_initialize ();
 		my d_gtkWindow = (GtkWindow *) gtk_window_new (GTK_WINDOW_TOPLEVEL);
+		int tabletWidth, tabletHeight;
+		if (_GuiGtk_getTabletSize (& tabletWidth, & tabletHeight)) {
+			width = std::min (width, tabletWidth);
+			height = std::min (height, tabletHeight);
+			minimumWidth = std::min (minimumWidth, tabletWidth);
+			minimumHeight = std::min (minimumHeight, tabletHeight);
+			gtk_window_set_position (my d_gtkWindow, GTK_WIN_POS_CENTER);
+		}
 		#if 0
 			static const GdkRGBA backgroundColour { 0.92, 0.92, 0.92, 1.0 };
 			gtk_widget_override_background_color (GTK_WIDGET (my d_gtkWindow), GTK_STATE_FLAG_NORMAL, & backgroundColour);

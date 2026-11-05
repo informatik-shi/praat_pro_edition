@@ -90,15 +90,31 @@ GuiDialog GuiDialog_create (GuiWindow parent, int x, int y, int width, int heigh
 		}
 		g_signal_connect (G_OBJECT (my d_gtkWindow), "delete-event",
 				my d_goAwayCallback ? G_CALLBACK (_GuiGtkDialog_goAwayCallback) : G_CALLBACK (gtk_widget_hide_on_delete), me.get());
-		gtk_window_set_default_size (GTK_WINDOW (my d_gtkWindow), width, height);
+		int tabletWidth, tabletHeight;
+		const bool scrollOnTablet = _GuiGtk_getTabletSize (& tabletWidth, & tabletHeight) &&
+			(width > tabletWidth || height > tabletHeight);
+		gtk_window_set_default_size (GTK_WINDOW (my d_gtkWindow),
+			scrollOnTablet ? std::min (width, tabletWidth) : width,
+			scrollOnTablet ? std::min (height, tabletHeight) : height);
 		//gtk_window_set_modal (GTK_WINDOW (my d_gtkWindow), modality >= GuiDialog_Modality::MODAL);
-		gtk_window_set_resizable (GTK_WINDOW (my d_gtkWindow), false);
+		gtk_window_set_resizable (GTK_WINDOW (my d_gtkWindow), scrollOnTablet);
 		//GuiObject vbox = GTK_DIALOG (my d_gtkWindow) -> vbox;
 		GuiObject vbox = gtk_dialog_get_content_area (GTK_DIALOG (my d_gtkWindow));
 		my d_widget = gtk_fixed_new ();
 		_GuiObject_setUserData (my d_widget, me.get());
 		gtk_widget_set_size_request (GTK_WIDGET (my d_widget), width, height);
-		gtk_container_add (GTK_CONTAINER (vbox /*my d_gtkWindow*/), GTK_WIDGET (my d_widget));
+		if (scrollOnTablet) {
+			GtkWidget *scroll = gtk_scrolled_window_new (nullptr, nullptr);
+			gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+			gtk_widget_set_vexpand (scroll, true);
+			gtk_widget_set_hexpand (scroll, true);
+			gtk_container_add (GTK_CONTAINER (scroll), GTK_WIDGET (my d_widget));
+			gtk_container_add (GTK_CONTAINER (vbox), scroll);
+			gtk_widget_show_all (scroll);
+			gtk_window_set_position (my d_gtkWindow, GTK_WIN_POS_CENTER);
+		} else {
+			gtk_container_add (GTK_CONTAINER (vbox), GTK_WIDGET (my d_widget));
+		}
 		gtk_widget_show (GTK_WIDGET (my d_widget));
 		g_signal_connect (G_OBJECT (my d_widget), "destroy", G_CALLBACK (_GuiGtkDialog_destroyCallback), me.get());
 		#if defined (chrome)

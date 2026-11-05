@@ -38,6 +38,7 @@ class GuiControlBlockValueChangedCallbacks {
 
 #if gtk
 	void GuiGtk_initialize ();
+	bool _GuiGtk_getTabletSize (int *width, int *height);
 #elif motif
 	#include <windows.h>
 	#include <commctrl.h>

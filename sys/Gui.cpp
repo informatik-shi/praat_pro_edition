@@ -47,6 +47,25 @@ int Gui_getResolution (GuiObject widget) {
 }
 
 #if gtk
+	bool _GuiGtk_getTabletSize (int *width, int *height) {
+		const char *tablet = g_getenv ("PRAAT_TABLET");
+		if (! tablet || strcmp (tablet, "1") != 0)
+			return false;
+		GdkDisplay *display = gdk_display_get_default ();
+		if (! display)
+			return false;
+		GdkMonitor *monitor = gdk_display_get_primary_monitor (display);
+		if (! monitor && gdk_display_get_n_monitors (display) > 0)
+			monitor = gdk_display_get_monitor (display, 0);
+		if (! monitor)
+			return false;
+		GdkRectangle area;
+		gdk_monitor_get_workarea (monitor, & area);
+		// Reserve room for window-manager borders and the title bar.
+		*width = std::max (1, area.width - 24);
+		*height = std::max (1, area.height - 64);
+		return true;
+	}
 	void GuiGtk_initialize () {
 		static bool gtkHasBeenInitialized = false;
 		if (! gtkHasBeenInitialized) {

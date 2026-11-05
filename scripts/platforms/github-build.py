@@ -18,12 +18,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument("action", choices=("access", "dispatch", "status", "logs", "download", "cancel", "diagnose"))
 parser.add_argument("--repo", default="informatik-shi/praat_pro_edition")
 parser.add_argument("--ref", default="build/macos-linux")
+parser.add_argument("--workflow", default="platform-builds.yml")
 parser.add_argument("--run", type=int)
 parser.add_argument("--platform", choices=("all", "linux", "macos"), default="all")
 parser.add_argument("--macos-runner", choices=("macos-26", "macos-15-intel", "macos-15"), default="macos-26")
 args = parser.parse_args()
 if not re.fullmatch(r"[\w.-]+/[\w.-]+", args.repo):
     raise SystemExit("Invalid repository name")
+if not re.fullmatch(r"[\w.-]+\.ya?ml", args.workflow):
+    raise SystemExit("Invalid workflow file name")
 env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GCM_INTERACTIVE="never")
 credential = subprocess.run(["git", "credential", "fill"], cwd=ROOT, env=env,
     input="protocol=https\nhost=github.com\n\n", text=True, capture_output=True)
@@ -63,7 +66,8 @@ if args.action == "access":
     repo = request(base)
     print(json.dumps({"repository": repo["full_name"], "private": repo["private"], "default_branch": repo["default_branch"], "permissions": repo.get("permissions", {})}))
 elif args.action == "dispatch":
-    request(base + "/actions/workflows/platform-builds.yml/dispatches", {"ref": args.ref, "inputs": {"platform": args.platform, "macos_runner": args.macos_runner}})
+    inputs = {} if args.workflow == "termux-build.yml" else {"platform": args.platform, "macos_runner": args.macos_runner}
+    request(base + f"/actions/workflows/{args.workflow}/dispatches", {"ref": args.ref, "inputs": inputs})
     print(f"Platform build requested for {args.repo} at {args.ref}")
 elif args.action == "status":
     if args.run:
