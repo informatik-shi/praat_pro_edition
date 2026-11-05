@@ -13,7 +13,7 @@ xcodebuild -project praat.xcodeproj -target praat_mac -configuration Configurati
 app=.local-build/macos/products/Configuration64/Praat.app
 binary="$app/Contents/MacOS/Praat"
 [[ -x "$binary" ]]
-lipo -verify_arch arm64 x86_64 "$binary"
+lipo "$binary" -verify_arch arm64 x86_64
 export PRAAT_EXECUTABLE="$PWD/$binary"
 bash scripts/test-spectrogram-s.sh
 bash scripts/test-smart-spectrogram.sh
