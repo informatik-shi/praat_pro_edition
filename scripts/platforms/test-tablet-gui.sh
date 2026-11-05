@@ -17,6 +17,7 @@ if [[ "${4:-}" != inside ]]; then
         external/{espeak,portaudio,flac,lame,mp3,glpk,clapack,gsl,num,vorbis,opusfile,whispercpp,blake3,zlib}/*.a \
         external/lua-5.5.1/liblua.a -Wl,--end-group \
         $(pkg-config --libs gtk+-3.0 jack) -lpulse -lasound -lm -lpthread
+    unset XDG_RUNTIME_DIR
     exec xvfb-run -a -s "-screen 0 ${size}x24" dbus-run-session -- \
         bash "$0" "$root" "$output" "$size" inside
 fi

@@ -1,6 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 set -euo pipefail
 : "${PREFIX:?Run this installer in Termux}"
+export TMPDIR="${TMPDIR:-$PREFIX/tmp}"
 [[ "$(uname -m)" == aarch64 ]] || { echo 'This package requires 64-bit ARM Android/Termux.' >&2; exit 2; }
 bundle="${1:?Usage: bash install-praat-pro-termux.sh /path/to/praat-pro-termux-aarch64.tar.gz}"
 bundle="$(realpath -- "$bundle")"
